@@ -105,12 +105,15 @@ Line 40 in entry.S
 === Q What's the first instruction after the kernel establishes a new
 ===   mapping that would fail to work properly if the mappings were
 ===   not in place? (address & instruction)
+0x10002d        jmp    *%eax
 
 === Q What functions from console.c are directly used by printf.c?
 ===   (just function names separated by spaces, not full declarations)
+cputchar
 
 === Q What is the task of console.c lines 194-202?
 ===   (free form, up to 10 words)
+When console is full, free new line in top of the console.
 
 ===   Consider the code
 ===   	int x = 1, y = 3, z = 4;
@@ -120,24 +123,31 @@ Line 40 in entry.S
 
 === Q What's the contents of the first byte in memory pointed to by
 ===   fmt? (write this byte as a number)
+'x' = 120, the first letter in the string.
 
 === Q What's the contents of the first byte in memory pointed to by
 ===   ap? (write this byte as a number)
+1 - the value of x.
 
 ===   Consider the code
 ===     unsigned int i = 0x00646c72;
 ===     cprintf("H%x Wo%s", 57616, &i);
 
 === Q What is the output of the code?
+He110 World
 
 === Q To lead to the same output in big-endian architecture, what
 ===   should be the value of the second argument?
+0x726c6400
 
 === Q To lead to the same output in big-endian architecture, what
 ===   should be the value of i?
 
 === Q What is printed after "y=" for cprintf("x=%d y=%d", 3)?
 ===   (free form, up to 10 words)
+According to the spec when va_arg is called with no more arguments
+in ap, the behavior is undefined.
+It will take the content of the stack after 3.
 
 === Q What instruction reserves space for kernel stack?
 ===   (address & instruction)
