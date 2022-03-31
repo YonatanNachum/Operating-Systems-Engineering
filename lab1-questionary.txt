@@ -71,7 +71,7 @@ bootmain
 === Q What are 4 words of memory at 0x100000 at the point the boot
 ===   loader enters the kernel?
 ===   (as displayed by gdb, in the form WORD1 WORD2 WORD3 WORD4)
-0x464c457f      0x00010101      0x00000000      0x00000000
+0x1badb002      0x00000000      0xe4524ffe      0x7205c766
 
 === Q What's the link address of .text section of the kernel?
 0xf0100000
@@ -138,10 +138,11 @@ He110 World
 
 === Q To lead to the same output in big-endian architecture, what
 ===   should be the value of the second argument?
-0x726c6400
-
+The value needs to stay the same - 57616.
+ 
 === Q To lead to the same output in big-endian architecture, what
 ===   should be the value of i?
+0x726c6400
 
 === Q What is printed after "y=" for cprintf("x=%d y=%d", 3)?
 ===   (free form, up to 10 words)
@@ -151,7 +152,12 @@ It will take the content of the stack after 3.
 
 === Q What instruction reserves space for kernel stack?
 ===   (address & instruction)
+0xf0100034:	bc 00 00 11 f0       	mov    $0xf0110000,%esp
 
 === Q How many 32-bit words (i.e. bytes/4) does each recursive nesting
 ===   level of test_backtrace adds to the stack size?
-
+8 including the return address of each call.
+After call saves return address on stack.
+It pushes %ebp and %ebx.
+Increase the stack with 20 bytes.
+In summary: 4+4+4+20=32 bytes -> 8 words.
