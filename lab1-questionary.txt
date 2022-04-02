@@ -105,7 +105,7 @@ Line 40 in entry.S
 === Q What's the first instruction after the kernel establishes a new
 ===   mapping that would fail to work properly if the mappings were
 ===   not in place? (address & instruction)
-0x10002d        jmp    *%eax
+0x10002d:        jmp    *%eax
 
 === Q What functions from console.c are directly used by printf.c?
 ===   (just function names separated by spaces, not full declarations)
@@ -113,7 +113,7 @@ cputchar
 
 === Q What is the task of console.c lines 194-202?
 ===   (free form, up to 10 words)
-When console is full, free new line in top of the console.
+When console is full, creates free new line in top of the console.
 
 ===   Consider the code
 ===   	int x = 1, y = 3, z = 4;
@@ -148,7 +148,7 @@ The value needs to stay the same - 57616.
 ===   (free form, up to 10 words)
 According to the spec when va_arg is called with no more arguments
 in ap, the behavior is undefined.
-It will take the content of the stack after 3.
+It will take the content of the 4 bytes after 3 in the stack.
 
 === Q What instruction reserves space for kernel stack?
 ===   (address & instruction)
