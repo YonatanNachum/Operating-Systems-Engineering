@@ -98,9 +98,11 @@ Line 40 in entry.S
 ===   one before the change of the link address.
 ===   Check yourself by recompiling & debugging!
 ===   (address & instruction)
+0x7c2d: ljmp    $PROT_MODE_CSEG, $protcseg
+0x7c2d:	ea 36 7c 08 00 66 b8 	ljmp   $0xb866,$0x87c36
+We changed link address to 0x7c01:
 0x7c31: ljmp    $PROT_MODE_CSEG, $protcseg
 0x7c31:	ea 36 7c 08 00 66 b8 	ljmp   $0xb866,$0x87c36
-(We changed link address to: 0x7c01)
 
 === Q What's the first instruction after the kernel establishes a new
 ===   mapping that would fail to work properly if the mappings were
