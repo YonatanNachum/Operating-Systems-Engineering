@@ -16,6 +16,7 @@
 === Q What's the purpose of leaving virtual memory region
 ===   0xeebfe000-0xeebff000 inaccessible?
 ===   (free form, up to 10 words)
+This is the guarding page for the stack.
 
 === Q Define a page table entry with the following properties:
 ===   frame starts at 0x1234000. It can be written by the kernel
@@ -24,6 +25,7 @@
 ===   recently successfully read from it. All bits which are not
 ===   responsible for above properties are set to zero.  
 ===   (a single memory WORD as would be output by gdb's x/1x)
+0x1234025
 
 === Q Consider JOS kernel code:
 ===     mystery_t x;
@@ -32,7 +34,7 @@
 ===   	x = (mystery_t) value;
 ===   What type mystery_t should refer to?
 ===   (remove leading "====" from the correct answer line)
-==== uintptr_t
+uintptr_t
 ==== physaddr_t
 
 
@@ -53,32 +55,45 @@
 ===    ...
 ===    42    0x98765 "struct Segdesc gdt[]" "Global descriptor table"
 ===    50    0x00011 ""                     "boot loader code"
+0   0x00000000  
+1   0x00400000
+2   0x00800000
+...
+956 0xef000000    "User Pages"            "pages array"
+957 0xef400000    "Current page table"    "Current Page Table"    
 
 === Q We have placed the kernel and user environment in the same
 ===   address space. Why will user programs not be able to read or
 ===   write the kernel's memory? What specific mechanisms protect the
 ===   kernel memory?
 ===   (free form, up to 15 words)
+kernel memory pte's are protected by permission bits and CPL
 
 === Q Which virtual addresses are readable by the user?
 ===   (in the form ADDR1-ADDR2, if none, specify NONE)
+0x00000000 - 0xef800000
 
 === Q Which virtual addresses are writable by the user?
 ===   (in the form ADDR1-ADDR2, if none, specify NONE)
+0x00000000 - 0xeec00000
 
 === Q Assume a hacker can change N bits inside page table (on any
 ===   level, PD or PT) after it has been set up by the kernel (and
 ===   before full TLB flush). What is the minimal N to gain full
 ===   control of the system from hacker's user space process?
+2
 
 === Q What's the maximum amount of physical memory this kernel can
 ===   support? (number of megabytes, without MB suffix)
+256
 
 === Q What single constant can be changed in kernel source to make
 ===   this limit 2 times lower (if kernel normally supports 10MB,
 ===   we want to make it support only 5MB?
+KERNBASE
 
 === Q What value should this constant be changed to?
+0xf8000000
 
 === Q Assume the computer has the maximum amount of memory supported
 ===   by the (unmodified) kernel. What's the overhead of managing this
