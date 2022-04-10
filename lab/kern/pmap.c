@@ -17,7 +17,7 @@ static size_t npages_basemem;	// Amount of base memory (in pages)
 pde_t *kern_pgdir;		// Kernel's initial page directory
 struct PageInfo *pages;		// Physical page state array
 static struct PageInfo *page_free_list;	// Free list of physical pages
-
+uint8_t pse_support;	//Processor support 4MB pages
 
 // --------------------------------------------------------------
 // Detect machine's physical memory setup.
@@ -58,6 +58,7 @@ i386_detect_memory(void)
 // --------------------------------------------------------------
 
 static void boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm);
+static void boot_kernel_map(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm);
 static void check_page_free_list(bool only_low_memory);
 static void check_page_alloc(void);
 static void check_kern_pgdir(void);
@@ -131,7 +132,8 @@ mem_init(void)
 	// Find out how much memory the machine has (npages & npages_basemem).
 	i386_detect_memory();
 
-	// Remove this line when you're ready to test this function.
+	// Check for processor support for 4MB pages.
+	pse_support = rcr4() & CR4_PSE ? 1 : 0;
 
 	//////////////////////////////////////////////////////////////////////
 	// create initial page directory.
@@ -203,7 +205,11 @@ mem_init(void)
 	// we just set up the mapping anyway.
 	// Permissions: kernel RW, user NONE
 	// Your code goes here:
-	boot_map_region(kern_pgdir, KERNBASE, ~KERNBASE, 0, PTE_W);
+	if (pse_support ==1) {
+		boot_kernel_map(kern_pgdir, KERNBASE, ~KERNBASE, 0, PTE_W);
+	} else {
+		boot_map_region(kern_pgdir, KERNBASE, ~KERNBASE, 0, PTE_W);
+	}
 
 	// Check that the initial page directory has been set up correctly.
 	check_kern_pgdir();
@@ -380,7 +386,15 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 	struct PageInfo *new_page;
 	pte_t *page_table;
 	pdx = PDX(va);
-	ptx = PTX(va);	
+	ptx = PTX(va);
+
+	/* if 4MB pages is supported and the entry in the page directory is
+	 * marked as large page return the address of the entry.
+	 * */
+	if (pse_support == 1 && pgdir[pdx] & PTE_PS) {
+		return &pgdir[pdx];
+	}
+
 	if (!(pgdir[pdx] & PTE_P)) {
 		if (create == false) {
 			return NULL;
@@ -422,6 +436,18 @@ boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm
 
 		va += PGSIZE;
 		pa += PGSIZE;
+	}
+}
+
+static void
+boot_kernel_map(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm)
+{
+	uint32_t i;
+	pte_t *pde;
+	for (i = 0; i <= size / PTSIZE; ++i) {
+		pgdir[PDX((void *)va)] = pa | perm | PTE_P | PTE_PS;
+		va += PTSIZE;
+		pa += PTSIZE;
 	}
 }
 
@@ -707,8 +733,13 @@ check_kern_pgdir(void)
 
 
 	// check phys mem
-	for (i = 0; i < npages * PGSIZE; i += PGSIZE)
-		assert(check_va2pa(pgdir, KERNBASE + i) == i);
+	if (pse_support ==1) {
+		for (i = 0; i < npages * PGSIZE; i += PTSIZE)
+			assert(check_va2pa(pgdir, KERNBASE + i) == i);
+	} else {
+		for (i = 0; i < npages * PGSIZE; i += PGSIZE)
+			assert(check_va2pa(pgdir, KERNBASE + i) == i);
+	}
 
 	// check kernel stack
 	for (i = 0; i < KSTKSIZE; i += PGSIZE)
@@ -725,7 +756,10 @@ check_kern_pgdir(void)
 			break;
 		default:
 			if (i >= PDX(KERNBASE)) {
-				assert(pgdir[i] & PTE_P);
+				if ((pgdir[i] & PTE_P) == 0) {
+					cprintf("%u\n", i);
+					panic("as");
+				}
 				assert(pgdir[i] & PTE_W);
 			} else
 				assert(pgdir[i] == 0);
@@ -744,6 +778,10 @@ static physaddr_t
 check_va2pa(pde_t *pgdir, uintptr_t va)
 {
 	pte_t *p;
+
+	if (pgdir[PDX(va)] & PTE_PS) {
+		return PTE_ADDR(pgdir[PDX(va)]);
+	}
 
 	pgdir = &pgdir[PDX(va)];
 	if (!(*pgdir & PTE_P))

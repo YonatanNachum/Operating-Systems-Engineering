@@ -61,6 +61,17 @@ entry:
 	orl	$(CR0_PE|CR0_PG|CR0_WP), %eax
 	movl	%eax, %cr0
 
+	# Check support for Page Size Extensions (4MB pages)
+	# If bit 3 in edx is on after cpuid Page Size Extensions is supported.
+	movl $0x1, %eax
+	cpuid
+	test $0x8, %edx
+	jz not_supported
+	movl	%cr4, %eax
+	orl	$(CR4_PSE), %eax
+	movl	%eax, %cr4
+
+not_supported:
 	# Now paging is enabled, but we're still running at a low EIP
 	# (why is this okay?).  Jump up above KERNBASE before entering
 	# C code.
