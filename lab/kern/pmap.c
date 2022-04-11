@@ -756,10 +756,7 @@ check_kern_pgdir(void)
 			break;
 		default:
 			if (i >= PDX(KERNBASE)) {
-				if ((pgdir[i] & PTE_P) == 0) {
-					cprintf("%u\n", i);
-					panic("as");
-				}
+				assert(pgdir[i] & PTE_P);
 				assert(pgdir[i] & PTE_W);
 			} else
 				assert(pgdir[i] == 0);
