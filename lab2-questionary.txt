@@ -55,19 +55,23 @@ uintptr_t
 ===    ...
 ===    42    0x98765 "struct Segdesc gdt[]" "Global descriptor table"
 ===    50    0x00011 ""                     "boot loader code"
-0   0x00000000  
-1   0x00400000
-2   0x00800000
+0    0x00000000    "unmapped"
+1    0x00400000    "unmapped"
+2    0x00800000    "unmapped"
 ...
-956 0xef000000    "User Pages"            "pages array"
-957 0xef400000    "Current page table"    "Current Page Table"    
-
+956  0xef000000    "struct PageInfo*"            "pages array"
+957  0xef400000    "pde_t *"                     "Current Page Table"    
+958  0xef800000    "unmapped"
+959  0xefc00000    "char bootstack[]"            "kernel stack"
+960  0xf0000000    "page"                        "page of first 4MB of physical memory"
+...
+1023 0xffc00000    "page"                        "page of last 4MB of physical memory"
 === Q We have placed the kernel and user environment in the same
 ===   address space. Why will user programs not be able to read or
 ===   write the kernel's memory? What specific mechanisms protect the
 ===   kernel memory?
 ===   (free form, up to 15 words)
-kernel memory pte's are protected by permission bits and CPL
+kernel memory pte's are protected by permission bits(PTE_U) and CPL
 
 === Q Which virtual addresses are readable by the user?
 ===   (in the form ADDR1-ADDR2, if none, specify NONE)
@@ -111,6 +115,9 @@ KERNBASE
 ===    Format example (all the values are made up; omit the header):
 ===    SIZE  DATA-STRUCTURE         NAME/DESCRIPTION
 ===    42    "struct Segdesc gdt[]" "Global descriptor table"
+512    "struct PageInfo*"  "struct pageInfo for each of the 65536 pages"
+4      "pde_t*"            "PDE has 1024 entries, each of size 4B"
+4096   "pte_t*"            "each entry in pgdir leads to 4KB page table"
 
 ====================================================================
 === Q What challenge(s) have you chosen to implement? (specify
@@ -137,6 +144,7 @@ After this, we added a global variable "pse_support" to pmap.c that checks in th
 start of mem_init if CR4_PSE in on in CR4. If it is on we use boot_kernel_map to map kernel
 virtual memory to the physical memory which uses only the page table directory to map 4MB pages 
 each time. We also added support in pagedir_walk and page_lookup for large pages.
+Remove comment in line 136 in pmap.c to enable PSE.
 
 Challenge 2:
 We added 3 new commands: showmappings, ChangePagePerm, memoryDump.
