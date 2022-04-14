@@ -10,9 +10,9 @@
 #include <kern/console.h>
 #include <kern/monitor.h>
 #include <kern/kdebug.h>
+#include <kern/pmap.h>
 
 #define CMDBUF_SIZE	80	// enough for one VGA text line
-
 
 struct Command {
 	const char *name;
@@ -25,6 +25,9 @@ static struct Command commands[] = {
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
 	{ "backtrace", "Display backtrace info of the stack", mon_backtrace },
+	{ "showmappings", "Display physical page mappings", mon_showmap },
+	{ "ChangePagePerm", "Set, clear, or change the permissions of any mapping in the current address space", mon_change},
+	{ "memoryDump", "Dump the contents of a range of memory given either a virtual or physical address range", mon_memdump},
 };
 #define NCOMMANDS (sizeof(commands)/sizeof(commands[0]))
 
@@ -37,6 +40,209 @@ mon_help(int argc, char **argv, struct Trapframe *tf)
 
 	for (i = 0; i < NCOMMANDS; i++)
 		cprintf("%s - %s\n", commands[i].name, commands[i].desc);
+	return 0;
+}
+
+static bool
+string_to_address(char *s, uint32_t *num)
+{
+	int len = strlen(s);
+	uint32_t digit;
+	if (len < 3 || s[0] != '0' || s[1] != 'x') {
+		return false;
+	}
+	int base = 1;
+	--len;
+	for (; len >= 2; len--)
+	{
+		if ((s[len] >= '0' && s[len] <= '9')) {
+			digit = (s[len] - '0');
+		} else if ((s[len] >= 'a' && s[len] <= 'f')) {
+			digit = (s[len] - 'a' + 10);
+		} else {
+			return false;
+		}
+		*num += digit*base;
+		base *= 16;
+	}
+	return true;
+}
+
+int
+mon_showmap(int argc, char **argv, struct Trapframe *tf)
+{
+	uint32_t begin, end, tmp;
+	pte_t *pte;
+	pde_t *pgdir = KADDR(rcr3());
+
+	if (argc != 3) {
+		cprintf("Invalid number of arguments: %d\n", argc);
+		return 0;
+	}
+	begin = 0;
+	end = 0;
+	if ((!string_to_address(argv[1], &begin)) ||
+	    (!string_to_address(argv[2], &end))) {
+		cprintf("Invalid arguments: [%s] [%s]\n", argv[1], argv[2]);
+		return 0;
+	}
+	begin = ROUNDDOWN(begin, PGSIZE);
+
+	while (begin <= end) {
+		pte = pgdir_walk(pgdir, (void *)begin, 0);
+		if (pte == NULL) {
+			cprintf("virtual:0x%x     physical: Not mapped", begin);
+		} else {
+			cprintf("virtual:0x%08x     physical:0x%08x      flags:0x%03x",
+				begin, PTE_ADDR(*pte), PGOFF(*pte));
+		}
+		if (pte == NULL || *pte & PTE_PS) {
+			cprintf("  (4MB page)\n");
+			tmp = begin + PTSIZE;
+		} else {
+			cprintf("\n");
+			tmp = begin + PGSIZE;
+		}
+		if (tmp > begin) {
+			begin = tmp;
+		} else {
+			break;
+		}
+	}
+	return 0;
+}
+
+static bool
+update_perm(pte_t *pte, int argc, char **argv, uint32_t addr)
+{
+	uint8_t i;
+	uint16_t add_perm = 0, del_perm = 0;
+
+	for (i = 3; i < argc; ++i) {
+		if (strcmp(argv[i], "W") == 0) {
+			add_perm |= PTE_W;
+		} else if (strcmp(argv[i], "~W") == 0) {
+			del_perm |= PTE_W;
+		} else if (strcmp(argv[i], "U") == 0) {
+			add_perm |= PTE_U;
+		} else if (strcmp(argv[i], "~U") == 0) {
+			del_perm |= PTE_U;
+		} else {
+			cprintf("Invalid flag: %s, legal flags are: W, ~W, U, ~U\n", argv[i]);
+			return false;
+		}
+	}
+	*pte = *pte | add_perm;
+	*pte = *pte & ~del_perm;
+	return true;
+}
+
+int
+mon_change(int argc, char **argv, struct Trapframe *tf)
+{
+	uint32_t addr = 0;
+	pte_t *pte;
+	pde_t *pgdir = KADDR(rcr3());
+
+	if (argc < 3) {
+		cprintf("Invalid number of arguments: %d\n", argc);
+		return 0;
+	}
+
+	if (strcmp(argv[1], "clear") == 0) {
+		if (!string_to_address(argv[2], &addr)) {
+			cprintf("Invalid address: %s\n", argv[2]);
+			return 0;
+		}
+		cprintf("addr 0x%x\n", addr);
+		if (argc != 3) {
+			cprintf("Invalid number of arguments: %d\n", argc);
+			return 0;
+		}
+		pte = pgdir_walk(pgdir, (void *)addr, 0);
+		*pte = *pte & ~(PTE_W | PTE_U);
+
+	} else {
+		if (strcmp(argv[1], "set") == 0) {
+			if (!string_to_address(argv[2], &addr)) {
+				cprintf("Invalid address: %s\n", argv[2]);
+				return 0;
+			}
+			pte = pgdir_walk(pgdir, (void *)addr, 0);
+			if (!update_perm(pte, argc, argv, addr)) {
+				return 0;
+			}
+
+		} else {
+			cprintf("Invalid command: %s, Only clear and set are allowed\n", argv[1]);
+			return 0;
+		}
+	}
+	cprintf("virtual:0x%08x     physical:0x%08x      flags:0x%03x\n",
+		addr, PTE_ADDR(*pte), PGOFF(*pte));
+	return 0;
+}
+
+int
+mon_memdump(int argc, char **argv, struct Trapframe *tf)
+{
+	uint32_t begin, end, tmp;
+	pte_t *pte;
+	bool virt;
+
+	pde_t *pgdir = KADDR(rcr3());
+
+	if (argc != 4) {
+		cprintf("Invalid number of arguments: %d\n", argc);
+		return 0;
+	}
+	begin = 0;
+	end = 0;
+	if ((!string_to_address(argv[1], &begin)) ||
+	    (!string_to_address(argv[2], &end))) {
+		cprintf("Invalid arguments: [%s] [%s]\n", argv[1], argv[2]);
+		return 0;
+	}
+	if (strcmp(argv[3], "-v") == 0) {
+		virt = true;
+	} else {
+		if (strcmp(argv[3], "-p") == 0) {
+			virt = false;
+		} else {
+			cprintf("Invalid address flag: [%s], -v = virtual, -p = physical\n", argv[3]);
+			return 0;
+		}
+	}
+	begin = ROUNDDOWN(begin, PGSIZE);
+
+	if (virt) {
+		while (begin <= end) {
+            struct PageInfo *page = page_lookup(pgdir, (void *)begin, NULL);
+			cprintf("virtual:0x%08x     ", begin);
+			if (page) {
+				cprintf("physical:0x%08x     ", page2pa(page) + PGOFF(begin));
+				int j;
+                for (j = 0; j < 0x10; j += 4) {
+                    cprintf("%08lx ", *(long *)(begin + j));
+                }
+                cprintf("\n");
+            } else {
+                cprintf(" not mapped\n");
+            }
+			begin += 0x10;
+		}
+	} else {
+        while (begin <= end) {
+			cprintf("physical:0x%08x     ");
+            int j;
+            for (j = 0; j < 0x10; j += 4) {
+                cprintf("%08lx ", *(long *)KADDR(begin + j));
+            }
+			cprintf("\n");
+			begin += 0x10;
+        }
+        cprintf("\n");
+    }
 	return 0;
 }
 

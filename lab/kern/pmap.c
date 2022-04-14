@@ -398,7 +398,7 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 	if (!(pgdir[pdx] & PTE_P)) {
 		if (create == false) {
 			return NULL;
-		}	
+		}
 		//Create page table
 		new_page = page_alloc(ALLOC_ZERO);
 		if (new_page == NULL) {
