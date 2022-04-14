@@ -59,6 +59,8 @@ string_to_address(char *s, uint32_t *num)
 			digit = (s[len] - '0');
 		} else if ((s[len] >= 'a' && s[len] <= 'f')) {
 			digit = (s[len] - 'a' + 10);
+		} else if ((s[len] >= 'A' && s[len] <= 'F')) {
+			digit = (s[len] - 'A' + 10);
 		} else {
 			return false;
 		}
@@ -207,7 +209,7 @@ mon_memdump(int argc, char **argv, struct Trapframe *tf)
 	begin = 0;
 	end = 0;
 	if ((!string_to_address(argv[1], &begin)) ||
-	    	(!string_to_address(argv[2], &end))) {
+	    (!string_to_address(argv[2], &end))) {
 		cprintf("Invalid arguments: [%s] [%s]\n", argv[1], argv[2]);
 		return 0;
 	}
