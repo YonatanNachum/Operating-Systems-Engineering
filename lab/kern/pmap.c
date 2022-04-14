@@ -133,7 +133,7 @@ mem_init(void)
 	i386_detect_memory();
 
 	// Check for processor support for 4MB pages.
-	pse_support = rcr4() & CR4_PSE ? 1 : 0;
+	//pse_support = rcr4() & CR4_PSE ? 1 : 0;
 
 	//////////////////////////////////////////////////////////////////////
 	// create initial page directory.
@@ -520,6 +520,14 @@ page_lookup(pde_t *pgdir, void *va, pte_t **pte_store)
 	// Fill this function in
 	pte_t *pte = pgdir_walk(pgdir, va, 0);
 	if ((pte != NULL) && (*pte & PTE_P)) {
+		/* When support 4MB pages, we have continues 1024 4kb pages to create it. 
+		 * take the page for the specific virtual address
+		 * */
+		if (pse_support == 1 && *pte & PTE_PS) {
+			uint32_t offset = HUGH_PGOFF(va);
+			offset /= PGSIZE;
+			return (pa2page(PTE_ADDR(*pte)) + offset);
+		}
 		if (pte_store != NULL) {
 			*pte_store = pte;
 		}

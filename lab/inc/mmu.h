@@ -38,6 +38,9 @@
 // offset in page
 #define PGOFF(la)	(((uintptr_t) (la)) & 0xFFF)
 
+// offset in 4MB page
+#define HUGH_PGOFF(la)	(((uintptr_t) (la)) & 0x3FFFFF)
+
 // construct linear address from indexes and offset
 #define PGADDR(d, t, o)	((void*) ((d) << PDXSHIFT | (t) << PTXSHIFT | (o)))
 
