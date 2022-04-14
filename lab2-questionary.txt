@@ -165,3 +165,5 @@ memoryDump:
 The command gets the start and end address and a flag -v\-p the says if its virtual or physical addresses.
 If the addresses are virtual we use page_lookup to get the struct pageInfo and from it get the physical
 address. If tge addresses are physical we use KADDR to get the virtual address.
+We print the memory in chunks of 16 bytes each time, so we loop from begin to end and advance by 0x10
+each time.
