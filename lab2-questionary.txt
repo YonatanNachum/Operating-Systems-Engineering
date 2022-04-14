@@ -115,10 +115,45 @@ KERNBASE
 ====================================================================
 === Q What challenge(s) have you chosen to implement? (specify
 ===   challenge numbers separated by spaces, if more than one)
+1 2
 
 === Q If the challenge requires changing the kernel source, list the
 ===   files which you have changed/added during implementation.
 ===   (one file per line, relative to lab directory containing .git/)
+entry.S
+pmap.c
+mmu.h
+monitor.h
+monitor.c
 
 === Q Describe your solution.
 ===   (free form, up to 500 words, don't need to use all 500!)
+Challenge 1:
+First, we checked if the processor support 4MB pages, we did it by adding
+the command "cpuid" to entry.s. IF PSE is supported bit 3 in edx will be 1 and 
+if so we add CR4_PSE to CR4 register which enables 4MB pages on the MMU. Writing
+to CR4 flushes the TLB to make sure all entries in it are up to date.
+After this, we added a global variable "pse_support" to pmap.c that checks in the 
+start of mem_init if CR4_PSE in on in CR4. If it is on we use boot_kernel_map to map kernel
+virtual memory to the physical memory which uses only the page table directory to map 4MB pages 
+each time. We also added support in pagedir_walk and page_lookup for large pages.
+
+Challenge 2:
+We added 3 new commands: showmappings, ChangePagePerm, memoryDump.
+showmappings:
+Gets the start and end virtual addresses. We translate the strings to numbers and then we loop
+through all the addresses in jumps of PGSIZE/PTSIZE and each time perform page walk to find the 
+physical address the pte it relates to. Each timme we print the physical address and the flags.
+
+ChangePagePerm:
+We support the clear or change of PTE_U, PTE_W. We get the pte using page walk and if the entry exits
+we execute, and if not we stop.
+The command starts with clear or set. if clear we zero the relevant flags in the pte relates to the
+virtual address.
+If the command starts set, the user can provide 4 flags: U, ~U, W, ~W. the corresponds for User/Supervisor
+and Write/Read only.
+
+memoryDump:
+The command gets the start and end address and a flag -v\-p the says if its virtual or physical addresses.
+If the addresses are virtual we use page_lookup to get the struct pageInfo and from it get the physical
+address. If tge addresses are physical we use KADDR to get the virtual address.

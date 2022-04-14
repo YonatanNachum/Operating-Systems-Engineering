@@ -160,6 +160,10 @@ mon_change(int argc, char **argv, struct Trapframe *tf)
 			return 0;
 		}
 		pte = pgdir_walk(pgdir, (void *)addr, 0);
+		if (pte == NULL) {
+			cprintf("virtual:0x%x Not mapped", addr);
+			return 0;
+		}
 		*pte = *pte & ~(PTE_W | PTE_U);
 
 	} else {
@@ -169,6 +173,10 @@ mon_change(int argc, char **argv, struct Trapframe *tf)
 				return 0;
 			}
 			pte = pgdir_walk(pgdir, (void *)addr, 0);
+			if (pte == NULL) {
+				cprintf("virtual:0x%x Not mapped", addr);
+				return 0;
+			}
 			if (!update_perm(pte, argc, argv, addr)) {
 				return 0;
 			}
@@ -199,7 +207,7 @@ mon_memdump(int argc, char **argv, struct Trapframe *tf)
 	begin = 0;
 	end = 0;
 	if ((!string_to_address(argv[1], &begin)) ||
-	    (!string_to_address(argv[2], &end))) {
+	    	(!string_to_address(argv[2], &end))) {
 		cprintf("Invalid arguments: [%s] [%s]\n", argv[1], argv[2]);
 		return 0;
 	}
@@ -217,32 +225,32 @@ mon_memdump(int argc, char **argv, struct Trapframe *tf)
 
 	if (virt) {
 		while (begin <= end) {
-            struct PageInfo *page = page_lookup(pgdir, (void *)begin, NULL);
+           		struct PageInfo *page = page_lookup(pgdir, (void *)begin, NULL);
 			cprintf("virtual:0x%08x     ", begin);
 			if (page) {
 				cprintf("physical:0x%08x     ", page2pa(page) + PGOFF(begin));
 				int j;
-                for (j = 0; j < 0x10; j += 4) {
-                    cprintf("%08lx ", *(long *)(begin + j));
-                }
-                cprintf("\n");
-            } else {
-                cprintf(" not mapped\n");
-            }
+                		for (j = 0; j < 0x10; j += 4) {
+                    			cprintf("%08lx ", *(long *)(begin + j));
+                		}
+               			cprintf("\n");
+            		} else {
+                		cprintf(" not mapped\n");
+        		}
 			begin += 0x10;
 		}
 	} else {
-        while (begin <= end) {
-			cprintf("physical:0x%08x     ");
-            int j;
-            for (j = 0; j < 0x10; j += 4) {
-                cprintf("%08lx ", *(long *)KADDR(begin + j));
-            }
+       		while (begin <= end) {
+			cprintf("physical:0x%08x     ", begin);
+            		int j;
+            		for (j = 0; j < 0x10; j += 4) {
+                		cprintf("%08lx ", *(long *)KADDR(begin + j));
+            		}
 			cprintf("\n");
 			begin += 0x10;
-        }
-        cprintf("\n");
-    }
+       		}
+        	cprintf("\n");
+	}
 	return 0;
 }
 

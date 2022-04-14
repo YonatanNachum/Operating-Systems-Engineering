@@ -526,6 +526,10 @@ page_lookup(pde_t *pgdir, void *va, pte_t **pte_store)
 		if (pse_support == 1 && *pte & PTE_PS) {
 			uint32_t offset = HUGH_PGOFF(va);
 			offset /= PGSIZE;
+			/* We return the PDE entry of the 4mb page */
+			if (pte_store != NULL) {
+				*pte_store = pte;
+			}
 			return (pa2page(PTE_ADDR(*pte)) + offset);
 		}
 		if (pte_store != NULL) {
