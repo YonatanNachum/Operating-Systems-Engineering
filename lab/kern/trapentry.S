@@ -54,18 +54,17 @@ TRAPHANDLER_NOEC(oflow_handler, T_OFLOW)
 TRAPHANDLER_NOEC(bound_handler, T_BOUND)
 TRAPHANDLER_NOEC(illop_handler, T_ILLOP)
 TRAPHANDLER_NOEC(device_handler, T_DEVICE)
-
 TRAPHANDLER(tss_handler, T_TSS)
 TRAPHANDLER(dblflt_handler, T_DBLFLT)
 TRAPHANDLER(segnp_handler, T_SEGNP)
 TRAPHANDLER(stack_handler, T_STACK)
 TRAPHANDLER(gpflt_handler, T_GPFLT)
 TRAPHANDLER(pgflt_handler, T_PGFLT)
-TRAPHANDLER(fperr_handler, T_FPERR)
+TRAPHANDLER_NOEC(fperr_handler, T_FPERR)
 TRAPHANDLER(align_handler, T_ALIGN)
-TRAPHANDLER(mchk_handler, T_MCHK)
-TRAPHANDLER(simderr_handler, T_SIMDERR)
-TRAPHANDLER(syscall_handler, T_SYSCALL)
+TRAPHANDLER_NOEC(mchk_handler, T_MCHK)
+TRAPHANDLER_NOEC(simderr_handler, T_SIMDERR)
+TRAPHANDLER_NOEC(syscall_handler, T_SYSCALL)
 
 
 
