@@ -20,6 +20,8 @@ no
 ===   were delivered to the same handler, what feature that exists in
 ===   the current implementation could not be provided?)
 ===   (free form, 1 sentence)
+Because different exceptions/interrupts have different ways to deal with then,
+and have different DPL so we can't provide the necessary protection.
 
 === Q Did you have to do anything to make the user/softint program
 ===   behave correctly?
@@ -37,7 +39,7 @@ his vector is 13.
 ===   instruction to invoke the kernel's page fault handler (which is
 ===   interrupt vector 14)?
 ===   (free form, 1 sentence)
-
+This will let user intefere with memory management which is not what we want.
 
 === Q The break point test case will either generate a break point
 ===   exception or a general protection fault depending on how you
@@ -64,14 +66,32 @@ and syscalls and can't invoke other expection that may change kernel structures.
 === Q In Exercise 9, what causes the page fault which panics the
 ===   kernel when running user/breakpoint?
 ===   (free form, 1 sentence)
+When we run backtrace, we are moving up in the call chain until we try to 
+access memory above libmain, memory at address 0xeebfe000 whice is above the user
+stack and the page above user stack in unmapped according to memlayout
+so we get page fault in the kernel.
 
 ====================================================================
 === Q What challenge(s) have you chosen to implement? (specify
 ===   challenge numbers separated by spaces, if more than one)
+1
 
 === Q If the challenge requires changing the kernel source, list the
 ===   files which you have changed/added during implementation.
 ===   (one file per line, relative to lab directory containing .git/)
+kern/trap.c
+kern/trapentry.s
 
 === Q Describe you solution.
 ===   (free form, up to 500 words, don't need to use all 500!)
+trapentry.s:
+We defined a new UNI_TRAPHANDLER which is the same for all interrupts,
+works like TRAPHANDLER/TRAPHANDLER_NOEC but also pushes a error code if the interrupt needs to have error code.
+We declared handlers, handlers is an global array which saves a handler name in the suitable interrupt index.
+Some of the cells in the array were padded in 0 becuese these indices does not support any interrupt.
+
+trap.c:
+Finally we looped over handlers array and used SETGATE to set each entry in the IDT for the relevant indices 
+with the appropriate values for each interrupt.
+
+
