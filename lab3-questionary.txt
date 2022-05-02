@@ -40,6 +40,8 @@ his vector is 13.
 ===   interrupt vector 14)?
 ===   (free form, 1 sentence)
 This will let user intefere with memory management which is not what we want.
+In our case, page fault handler will recognize that page fault was rised in 
+user mode so the environment will be destroyed.
 
 === Q The break point test case will either generate a break point
 ===   exception or a general protection fault depending on how you
