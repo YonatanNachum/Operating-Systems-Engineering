@@ -20,7 +20,7 @@ no
 ===   were delivered to the same handler, what feature that exists in
 ===   the current implementation could not be provided?)
 ===   (free form, 1 sentence)
-Because different exceptions/interrupts have different ways to deal with then,
+Because different exceptions/interrupts have different ways to deal with,
 and have different DPL so we can't provide the necessary protection.
 
 === Q Did you have to do anything to make the user/softint program
