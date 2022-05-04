@@ -3,6 +3,7 @@
 Faculty of Computer Science, Technion.
 
 ## Introduction
+We implemented, from scratch, a minimalistic yet fully functional operating system that supports virtual memory, kernel and user modes, system calls, threads, context switches, interrupts, interprocess communication, coordination of concurrent activities, file system I/O, and networking.
 
 ## Contents
 - Lab 1: Booting a PC
