@@ -60,6 +60,9 @@ so we can dereference e before and after loading a new pgdir.
 === Q In Ex. 9, what happens if the user environment runs out of
 ===   space on the exception stack?
 ===   (one setence, free form)
+When we calculate the address for the UTrapframe we check using user_mem_assert
+the we can access this memory and if not we panic which mean the current stack
+overflows.
 
 === Q In dumpfork.c, the first time you call duppage(), the function
 ===   allocates a page in one environment (env A) and then maps it in
