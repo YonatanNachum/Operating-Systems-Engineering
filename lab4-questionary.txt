@@ -19,6 +19,12 @@
 ===   boot/boot.S? In other words, what could go wrong if it were
 ===   omitted in kern/mpentry.S?
 ===   (free form)
+The purpose of MPBOOTPHYS is to calculate absolute addresses of its
+symbols, rather than relying on the linker to fill them.
+mpentry.S is loaded by the bootloader as part of the kernel, in boot_aps() we
+copy this code to MPENTRY_PADDR(0x7000) and we need MPBOOTPHYS to calculate the absolute
+addresses of its symbols unlike boot.S which uses the linker for this.
+This way we can execute the code where we want just like boot.S.
 
 === Q It seems that using the big kernel lock guarantees that only one
 ===   CPU can run the kernel code at a time. Why do we still need
@@ -26,11 +32,17 @@
 ===   which using a shared kernel stack will go wrong, even with the
 ===   protection of the big kernel lock.
 ===   (free form)
+When an x86 processor takes an interrupt or trap the processor pushes on the kernel stack
+SS, ESP, EFLAGS, CS, EIP, and an optional error code. This happens before acquiring the lock
+so if we have only one kernel stack there is a possible scenario that one processor is in kernel
+mode using the kernel stack and an interrupt raised in other processor and it adds the interrupt
+content to the kernel stack before checking the lock.
 
 === Q Whenever the kernel switches from one environment to another, it
 ===   must ensure the old environment's registers are saved so they
 ===   can be restored properly later. Where does this happen?
 ===   (JOS function name)
+trap()
 
 === Q In your implementation of env_run() you should have called
 ===   lcr3(). Before and after the call to lcr3(), your code makes
@@ -42,6 +54,8 @@
 ===   which the virtual address maps. Why can the pointer e be
 ===   dereferenced both before and after the addressing switch?
 ===   (one sentence, free form)
+Because the kernel part of the virtual memory of each environment is identical
+so we can dereference e before and after loading a new pgdir.
 
 === Q In Ex. 9, what happens if the user environment runs out of
 ===   space on the exception stack?
