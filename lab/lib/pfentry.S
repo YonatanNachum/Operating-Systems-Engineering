@@ -67,7 +67,7 @@ _pgfault_upcall:
 	// LAB 4: Your code here.
 	movl 0x28(%esp), %eax //eip
 	movl 0x30(%esp), %ebx //esp
-	subl $4, (%ebx)
+	subl $0x4, (%ebx)
 	movl %eax, (%ebx)
 	addl $0x8, %esp
 	
@@ -85,7 +85,7 @@ _pgfault_upcall:
 
 	// Switch back to the adjusted trap-time stack.
 	// LAB 4: Your code here.
-	pop %esp
+	popl %esp
 
 	// Return to re-execute the instruction that faulted.
 	// LAB 4: Your code here.

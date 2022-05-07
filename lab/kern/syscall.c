@@ -181,8 +181,8 @@ sys_page_alloc(envid_t envid, void *va, int perm)
 	if (envid2env(envid, &env, 1) < 0) {
 		return -E_BAD_ENV;
 	}
-	if ((uint32_t)va >= UTOP || PGOFF(va) ||
-	    (perm & (PTE_U | PTE_P)) == 0 || (perm & (~PTE_SYSCALL)) !=0) {
+	if ((uint32_t)va >= UTOP || PGOFF(va) || (perm & PTE_U) == 0 ||
+	    (perm & PTE_P) == 0 || (perm & (~PTE_SYSCALL)) !=0) {
 		return -E_INVAL;
 	}
 	page = page_alloc(ALLOC_ZERO);
@@ -232,7 +232,7 @@ sys_page_map(envid_t srcenvid, void *srcva,
 		return -E_BAD_ENV;
 	}
 	if ((uint32_t)srcva >= UTOP || PGOFF(srcva) || (uint32_t)dstva >= UTOP || PGOFF(dstva) ||
-	    (perm & (PTE_U | PTE_P)) == 0 || (perm & (~PTE_SYSCALL)) !=0) {
+	    (perm & PTE_U) == 0 || (perm & PTE_P) == 0 || (perm & (~PTE_SYSCALL)) !=0) {
 		return -E_INVAL;
 	}
 	page = page_lookup(src_env->env_pgdir, srcva, &pte);

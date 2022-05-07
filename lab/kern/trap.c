@@ -388,12 +388,12 @@ page_fault_handler(struct Trapframe *tf)
 	// LAB 4: Your code here.
 	struct UTrapframe *frame;
 	if (curenv->env_pgfault_upcall) {
-		if (tf->tf_esp >= UXSTACKTOP - PGSIZE && tf->tf_esp <= UXSTACKTOP) {
-			frame = (struct UTrapframe *)tf->tf_esp - 4 - sizeof(struct UTrapframe);
+		if (tf->tf_esp >= UXSTACKTOP - PGSIZE && tf->tf_esp < UXSTACKTOP) {
+			frame = (struct UTrapframe *)(tf->tf_esp - 4 - sizeof(struct UTrapframe));
 		} else {
-			frame = (struct UTrapframe *)UXSTACKTOP - sizeof(struct UTrapframe);
+			frame = (struct UTrapframe *)(UXSTACKTOP - sizeof(struct UTrapframe));
 		}
-		user_mem_assert(curenv, (void *)frame,  sizeof(struct UTrapframe), PTE_W | PTE_U);
+		user_mem_assert(curenv, (void *)frame, sizeof(struct UTrapframe), PTE_W | PTE_U);
 		frame->utf_esp = tf->tf_esp;
 		frame->utf_eflags = tf->tf_eflags;
 		frame->utf_eip = tf->tf_eip;
