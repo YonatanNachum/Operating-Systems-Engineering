@@ -248,11 +248,9 @@ trap_dispatch(struct Trapframe *tf)
 		// Handle spurious interrupts
 		// The hardware sometimes raises these because of noise on the
 		// IRQ line or other reasons. We don't care.
-		if (tf->tf_trapno == IRQ_OFFSET + IRQ_SPURIOUS) {
-			cprintf("Spurious interrupt on irq 7\n");
-			print_trapframe(tf);
-			return;
-		}
+		cprintf("Spurious interrupt on irq 7\n");
+		print_trapframe(tf);
+		return;
 	default:
 		// Unexpected trap: The user process or the kernel has a bug.
 		print_trapframe(tf);

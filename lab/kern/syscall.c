@@ -262,8 +262,6 @@ sys_page_unmap(envid_t envid, void *va)
 
 	// LAB 4: Your code here.
 	struct Env *env;
-	struct PageInfo *page;
-	pte_t *pte;
 
 	if (envid2env(envid, &env, 1) < 0) {
 		return -E_BAD_ENV;
