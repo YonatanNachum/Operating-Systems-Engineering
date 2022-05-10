@@ -61,7 +61,7 @@ so we can dereference e before and after loading a new pgdir.
 ===   space on the exception stack?
 ===   (one setence, free form)
 When we calculate the address for the UTrapframe we check using user_mem_assert
-the we can access this memory and if not we panic which mean the current stack
+if we can access this memory and if not we panic which mean the current stack
 overflows.
 
 === Q In dumpfork.c, the first time you call duppage(), the function

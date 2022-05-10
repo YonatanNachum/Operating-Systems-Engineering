@@ -25,7 +25,9 @@ pgfault(struct UTrapframe *utf)
 	//   (see <inc/memlayout.h>).
 
 	// LAB 4: Your code here.
-
+	if ((err & FEC_WR) == 0 || (uvpt[PGNUM(addr)] & PTE_COW) == 0) {
+		panic("pgfault: faulting access was not a write and copy-on-write page\n");
+	}
 	// Allocate a new page, map it at a temporary location (PFTEMP),
 	// copy the data from the old page to the new page, then move the new
 	// page to the old page's address.
@@ -33,8 +35,20 @@ pgfault(struct UTrapframe *utf)
 	//   You should make three system calls.
 
 	// LAB 4: Your code here.
-
-	panic("pgfault not implemented");
+	addr = ROUNDDOWN(addr, PGSIZE);
+	r = sys_page_alloc(0, (void *)PFTEMP, PTE_U | PTE_W | PTE_P);
+	if (r < 0) {
+		panic("pgfault: sys_page_alloc failed %e\n", r);
+	}
+	memcpy(PFTEMP, addr, PGSIZE);
+	r = sys_page_map(0, (void *)PFTEMP, 0, addr, PTE_U | PTE_W | PTE_P);
+	if (r < 0) {
+		panic("pgfault: sys_page_map failed %e\n", r);
+	}
+	r = sys_page_unmap(0, (void *)PFTEMP);
+	if (r < 0) {
+		panic("pgfault: sys_page_unmap failed %e\n", r);
+	}
 }
 
 //
@@ -51,10 +65,32 @@ pgfault(struct UTrapframe *utf)
 static int
 duppage(envid_t envid, unsigned pn)
 {
-	int r;
+	int err;
 
 	// LAB 4: Your code here.
-	panic("duppage not implemented");
+	void *addr = (void *) (pn * PGSIZE);
+	if (uvpt[pn] & PTE_SHARE) {
+		// 0 uses the current env
+		err = sys_page_map(0, addr, envid, addr, uvpt[pn] & PTE_SYSCALL);
+		if (err < 0) {
+			return err;
+		}
+	} else if((uvpt[pn] & PTE_COW) || (uvpt[pn] & PTE_W)) {
+		err = sys_page_map(0, addr, envid,  addr, PTE_COW | PTE_U | PTE_P);
+		if (err < 0) {
+			return err;
+		}
+		err = sys_page_map(0, addr, 0,  addr, PTE_COW | PTE_U | PTE_P);
+		if (err < 0) {
+			return err;
+		}
+	}
+	else{
+		err = sys_page_map(0, addr, envid,  addr, PTE_U | PTE_P);
+		if(err < 0) {
+			return err;
+		}
+	}
 	return 0;
 }
 
@@ -78,7 +114,43 @@ envid_t
 fork(void)
 {
 	// LAB 4: Your code here.
-	panic("fork not implemented");
+	int err;
+	uint32_t addr;
+	extern void _pgfault_upcall(void);
+	envid_t env_id;
+
+	set_pgfault_handler(pgfault);
+	env_id = sys_exofork();
+	if (env_id < 0) {
+		panic("fork:sys_exofork failed: %e\n ", env_id);
+	} else if (env_id == 0) {
+		thisenv = &envs[ENVX(sys_getenvid())];
+		return 0;
+	}
+	
+	for (addr = 0; addr < USTACKTOP; addr += PGSIZE) {
+		if ((uvpd[PDX(addr)] & PTE_P) && (uvpt[PGNUM(addr)]) & PTE_P){
+			err = duppage(env_id, PGNUM(addr));
+			if (err < 0) {
+				panic("fork: duppage failed: %e\n", err);
+			}
+		}
+	}
+
+	err = sys_page_alloc(env_id, (void *)(UXSTACKTOP - PGSIZE), PTE_P | PTE_W | PTE_U);
+	if (err < 0) {
+		panic("fork: set_pgfault_handler failed with err: %e\n", err);
+	}
+	err = sys_env_set_pgfault_upcall(env_id, _pgfault_upcall);
+	if (err < 0) {
+		panic("fork: set_pgfault_handler failed with err: %e\n", err);
+	}
+	err = sys_env_set_status(env_id, ENV_RUNNABLE);
+	if (err < 0){
+		panic("fork: sys_env_set_status failed with err: %e\n", err);
+	}
+	return env_id;
+
 }
 
 // Challenge!
