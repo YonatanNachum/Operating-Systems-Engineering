@@ -371,13 +371,23 @@ sys_ipc_recv(void *dstva)
 {
 	// LAB 4: Your code here.
 	if ((uint32_t)dstva < UTOP && PGOFF(dstva)) {
-		cprintf("here3!!!!!!!!!!!!!!!!!!!!!!!!\n");
 		return -E_INVAL;
 	}
 	curenv->env_ipc_dstva = dstva;
 	curenv->env_ipc_recving = true;
 	curenv->env_status = ENV_NOT_RUNNABLE;
 	sched_yield();
+	return 0;
+}
+
+static int
+sys_change_priority(uint8_t p)
+{
+	// LAB 4: Your code here.
+	if (p > 20) {
+		return -E_INVAL;
+	}
+	curenv->env_priority = p;
 	return 0;
 }
 
@@ -431,6 +441,8 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 	case SYS_ipc_try_send:
 		return sys_ipc_try_send(a1, a2, (void *)a3, a4);
 	
+	case SYS_change_priority:
+		return sys_change_priority(a1);
 	default:
 		return -E_INVAL;
 	}

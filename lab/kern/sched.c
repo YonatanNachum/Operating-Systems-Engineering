@@ -5,7 +5,26 @@
 #include <kern/pmap.h>
 #include <kern/monitor.h>
 
+//#define SCHED_CHALLANGE
+
 void sched_halt(void);
+
+static inline bool env_to_run(struct Env *env_b)
+{
+	int priority_diff = curenv->env_priority - env_b->env_priority;
+	int run_diff = curenv->env_runs - env_b->env_runs;
+	if (priority_diff >= 0) {
+		if(run_diff < priority_diff) {
+			return false;
+		}
+		return true;
+	} else {
+		if(run_diff < priority_diff){
+			return false;
+		}
+		return true;
+	}
+}
 
 // Choose a user environment to run and run it.
 void
@@ -29,6 +48,28 @@ sched_yield(void)
 	// below to halt the cpu.
 
 	// LAB 4: Your code here.
+#ifdef SCHED_CHALLANGE
+	idle = curenv;
+	uint32_t start = 0;
+	if (idle != NULL) {
+		start = ENVX(idle->env_id) + 1;
+	}
+	int j = 0;
+	while (j < NENV) {
+		int i = (start+j) % NENV;
+		if (envs[i].env_status == ENV_RUNNABLE) {
+			if (idle == NULL || env_to_run(&envs[i])) {
+				env_run(&envs[i]);
+			}
+		}
+		++j;
+	}
+	if (idle != NULL && idle->env_status == ENV_RUNNING) {
+		env_run(idle);
+	}
+	// sched_halt never returns
+	sched_halt();
+#else
 	idle = curenv;
 	uint32_t start = 0;
 	if (idle != NULL) {
@@ -47,6 +88,7 @@ sched_yield(void)
 	}
 	// sched_halt never returns
 	sched_halt();
+#endif
 }
 
 // Halt this CPU when there is nothing to do. Wait until the
