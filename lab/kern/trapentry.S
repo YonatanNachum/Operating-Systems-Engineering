@@ -113,8 +113,25 @@ UNI_TRAPHANDLER(align_handler, T_ALIGN)
 UNI_TRAPHANDLER(mchk_handler, T_MCHK)
 UNI_TRAPHANDLER(simderr_handler, T_SIMDERR)
 .data
-	.space 112
+	.space 48
+UNI_TRAPHANDLER(timer_handler, IRQ_OFFSET + IRQ_TIMER)
+UNI_TRAPHANDLER(kbd_handler, IRQ_OFFSET + IRQ_KBD)
+.data
+	.space 8
+UNI_TRAPHANDLER(serial_handler, IRQ_OFFSET + IRQ_SERIAL)
+.data
+	.space 8
+UNI_TRAPHANDLER(timer_spurious, IRQ_OFFSET + IRQ_SPURIOUS)
+.data
+	.space 24
+UNI_TRAPHANDLER(ide_spurious, IRQ_OFFSET + IRQ_IDE)
+.data
+	.space 4
 UNI_TRAPHANDLER(syscall_handler, T_SYSCALL)
+.data
+	.space 8
+UNI_TRAPHANDLER(ide_error, IRQ_OFFSET + IRQ_ERROR)
+
 
 /*
  * Lab 3: Your code here for _alltraps
