@@ -69,14 +69,39 @@ overflows.
 ===   another (env B). At what address is the page mapped in env A, and
 ===   at what address is it mapped in env B?
 ===   (ADDR(in env A):ADDR(in env B) (example: 0xAAAAAAAA:0xBBBBBBBB)
+0x800000:0x400000
 
 ====================================================================
 === Q What challenge(s) have you chosen to implement? (specify
 ===   challenge numbers separated by spaces, if more than one)
+2
 
 === Q If the challenge requires changing the kernel source, list the
 ===   files which you have changed/added during implementation.
 ===   (one file per line, relative to lab directory containing .git/)
+inc/env.h
+inc/lib.h
+inc/syscall.h
+kern/env.c
+kern/Makefrag
+kern/sched.c
+kern/syscall.c
+lib/syscall.c
+user/priority.c
 
 === Q Describe you solution.
 ===   (free form, up to 500 words, don't need to use all 500!)
+We added to struct Env new field, env_priority which is an unsigned int, initialized to zero.
+We added a new syscall to modify the env priority field for the env itself - sys_change_priority.
+We changed the scheduling policy, now the next enviroment to run when sched_yeild is called will be
+as follow:
+We used two parameters to decide if the scheduler should switch from the current running env and the
+env that is in queue:
+1. priority_diff - The difference in priority between the envs.
+2. run_diff - The difference in the number of runs each env did.
+The algorithm checks if the difference in runs between the higher prioritized env and the other env is at least 
+priority_diff, if so it will switch to the least prioritized env (might be curenv). Which means we give the higher
+prioritized env priority_diff extra runs in comparison to the other env.
+This solution tries to solve the starvation problem with running envs according to priority only.
+
+To run the new scheduler remove the comment from SCHED_CHALLANGE in the top of sched.c.
