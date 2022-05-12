@@ -25,6 +25,9 @@ mpentry.S is loaded by the bootloader as part of the kernel, in boot_aps() we
 copy this code to MPENTRY_PADDR(0x7000) and we need MPBOOTPHYS to calculate the absolute
 addresses of its symbols unlike boot.S which uses the linker for this.
 This way we can execute the code where we want just like boot.S.
+APs start in real mode, much like how the bootloader started in boot/boot.S, so we use
+MPBOOTPHYS to copie symbols to a memory location that is addressable in the 
+real mode and without it we crash.
 
 === Q It seems that using the big kernel lock guarantees that only one
 ===   CPU can run the kernel code at a time. Why do we still need
@@ -55,14 +58,18 @@ trap()
 ===   dereferenced both before and after the addressing switch?
 ===   (one sentence, free form)
 Because the kernel part of the virtual memory of each environment is identical
-so we can dereference e before and after loading a new pgdir.
+so we can dereference e before and after loading a new pgdir. That's because e
+is struct Env pointer and the envs array is allocated above KERNBASE which mean
+all envs share the same env array.
 
 === Q In Ex. 9, what happens if the user environment runs out of
 ===   space on the exception stack?
 ===   (one setence, free form)
 When we calculate the address for the UTrapframe we check using user_mem_assert
 if we can access this memory and if not we panic which mean the current stack
-overflows.
+overflows. Each time we fault in user mode, we go to the page_fault_handler in the
+kernel and create a new stack for it and check if it's address is legal and go back
+to user mode with this stack.
 
 === Q In dumpfork.c, the first time you call duppage(), the function
 ===   allocates a page in one environment (env A) and then maps it in
@@ -104,4 +111,7 @@ priority_diff, if so it will switch to the least prioritized env (might be curen
 prioritized env priority_diff extra runs in comparison to the other env.
 This solution tries to solve the starvation problem with running envs according to priority only.
 
+We added a test: priority.c that show the different way the envs run with the different schedulers,
+When we run it with the priority scheduler we can see the child env runs multiple times because hes priority
+is higher.
 To run the new scheduler remove the comment from SCHED_CHALLANGE in the top of sched.c.
