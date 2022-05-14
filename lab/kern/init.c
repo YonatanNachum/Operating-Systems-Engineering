@@ -16,6 +16,7 @@
 #include <kern/spinlock.h>
 #include <kern/time.h>
 #include <kern/pci.h>
+#include <kern/vga.h>
 
 static void boot_aps(void);
 
@@ -35,6 +36,8 @@ i386_init(void)
 	cons_init();
 
 	cprintf("6828 decimal is %o octal!\n", 6828);
+
+	vga_init();
 
 	// Lab 2 memory management initialization functions
 	mem_init();

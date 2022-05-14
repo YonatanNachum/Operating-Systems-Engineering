@@ -46,6 +46,7 @@ delay(void)
 #define   COM_LSR_TXRDY	0x20	//   Transmit buffer avail
 #define   COM_LSR_TSRE	0x40	//   Transmitter off
 
+
 static bool serial_exists;
 
 static int
@@ -160,8 +161,6 @@ cga_init(void)
 	crt_buf = (uint16_t*) cp;
 	crt_pos = pos;
 }
-
-
 
 static void
 cga_putc(int c)
