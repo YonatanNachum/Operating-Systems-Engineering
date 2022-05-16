@@ -15,6 +15,7 @@
 #include <kern/spinlock.h>
 #include <kern/time.h>
 #include <kern/e1000.h>
+#include <kern/mouse.h>
 
 static struct Taskstate ts;
 
@@ -136,6 +137,7 @@ trap_init(void)
 	SETGATE(idt[IRQ_OFFSET + IRQ_SERIAL], 0, GD_KT, handlers[IRQ_OFFSET + IRQ_SERIAL], 0);
 	SETGATE(idt[IRQ_OFFSET + IRQ_SPURIOUS], 0, GD_KT, handlers[IRQ_OFFSET + IRQ_SPURIOUS], 0);
 	SETGATE(idt[IRQ_OFFSET + IRQ_E1000], 0, GD_KT, handlers[IRQ_OFFSET + IRQ_E1000], 0);
+	SETGATE(idt[IRQ_OFFSET + IRQ_MOUSE], 0, GD_KT, handlers[IRQ_OFFSET + IRQ_MOUSE], 0);
 	SETGATE(idt[IRQ_OFFSET + IRQ_IDE], 0, GD_KT, handlers[IRQ_OFFSET + IRQ_IDE], 0);
 	SETGATE(idt[IRQ_OFFSET + IRQ_ERROR], 0, GD_KT, handlers[IRQ_OFFSET + IRQ_ERROR], 0);
 
@@ -256,6 +258,7 @@ trap_dispatch(struct Trapframe *tf)
 					      tf->tf_regs.reg_ecx, tf->tf_regs.reg_ebx,
 					      tf->tf_regs.reg_edi, tf->tf_regs.reg_esi);
 		break;
+
 	case IRQ_OFFSET + IRQ_SPURIOUS:
 		// Handle spurious interrupts
 		// The hardware sometimes raises these because of noise on the
@@ -296,6 +299,10 @@ trap_dispatch(struct Trapframe *tf)
 		e1000_intr();
 		irq_eoi();
 		lapic_eoi();
+	case IRQ_OFFSET + IRQ_MOUSE:
+		irq_eoi();
+		lapic_eoi();
+		mouse_intr();
 		break;
 
 	default:

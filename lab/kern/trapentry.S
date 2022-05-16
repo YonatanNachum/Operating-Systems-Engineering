@@ -125,8 +125,9 @@ UNI_TRAPHANDLER(spurious_handler, IRQ_OFFSET + IRQ_SPURIOUS)
 .data
 	.space 12
 UNI_TRAPHANDLER(e1000_handler, IRQ_OFFSET + IRQ_E1000)
+UNI_TRAPHANDLER(mouse_handler, IRQ_OFFSET + IRQ_MOUSE)
 .data
-	.space 8
+	.space 4
 UNI_TRAPHANDLER(ide_handler, IRQ_OFFSET + IRQ_IDE)
 .data
 	.space 4

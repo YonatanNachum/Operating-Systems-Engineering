@@ -8,6 +8,7 @@
 
 #include <kern/console.h>
 #include <kern/picirq.h>
+#include <kern/mouse.h>
 
 static void cons_intr(int (*proc)(void));
 static void cons_putc(int c);
@@ -319,11 +320,15 @@ static int
 kbd_proc_data(void)
 {
 	int c;
-	uint8_t data;
+	uint8_t data, status;
 	static uint32_t shift;
 
-	if ((inb(KBSTATP) & KBS_DIB) == 0)
+	if (((status = inb(KBSTATP)) & KBS_DIB) == 0)
 		return -1;
+
+	if (status & 0x20) {
+		return -1;
+	}
 
 	data = inb(KBDATAP);
 
@@ -377,7 +382,18 @@ kbd_init(void)
 	irq_setmask_8259A(irq_mask_8259A & ~(1<<1));
 }
 
+/***** Mouse *****/
+void
+mouse_poll(void)
+{
+	uint8_t status;
+	if (((status = inb(MOUSE_STATUS_REG)) & 1) == 0)
+		return;
 
+	if (status & 0x20) {
+		mouse_intr();
+	}
+}
 
 /***** General device-independent console code *****/
 // Here we manage the console input buffer,
@@ -419,6 +435,7 @@ cons_getc(void)
 	// (e.g., when called from the kernel monitor).
 	serial_intr();
 	kbd_intr();
+	mouse_poll();
 
 	// grab the next character from the input buffer.
 	if (cons.rpos != cons.wpos) {

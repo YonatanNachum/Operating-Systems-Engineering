@@ -17,6 +17,7 @@
 #include <kern/time.h>
 #include <kern/pci.h>
 #include <kern/vga.h>
+#include <kern/mouse.h>
 
 static void boot_aps(void);
 
@@ -37,8 +38,6 @@ i386_init(void)
 
 	cprintf("6828 decimal is %o octal!\n", 6828);
 
-	vga_init();
-
 	// Lab 2 memory management initialization functions
 	mem_init();
 
@@ -57,6 +56,8 @@ i386_init(void)
 	time_init();
 	pci_init();
 
+	vga_init();
+	mouse_init();
 	// Acquire the big kernel lock before waking up APs
 	// Your code here:
 	lock_kernel();

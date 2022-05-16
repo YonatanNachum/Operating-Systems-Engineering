@@ -67,7 +67,6 @@ write_pixel(uint32_t x, uint32_t y, uint8_t color)
 // 	}
 // }
 
-
 static void
 clear_screen (void)
 {
@@ -78,6 +77,7 @@ clear_screen (void)
                 }
         }
 }
+
 /* Initialize VGA to 320x200x256 */
 void
 vga_init(void)
