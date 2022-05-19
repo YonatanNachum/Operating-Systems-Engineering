@@ -21,3 +21,8 @@ We implemented, from scratch, a minimalistic yet fully functional operating syst
     - Multiprocessor Support and Cooperative Multitasking
     - Copy-on-Write Fork
     - Preemptive Multitasking and Inter-Process communication (IPC)
+- Lab 5: File System, Spawn and Shell
+    - File System: Disk Access, Block Cache, Block Bitmap, File Operations, File system interface
+    - Spawning Processes: Sharing library state across fork and spawn
+    - Keyboard Interface
+    - Shell Commands
