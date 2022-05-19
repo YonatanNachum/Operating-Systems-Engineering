@@ -24,6 +24,9 @@
 ===   privilege setting is saved and restored properly when you
 ===   subsequently switch from one environment to another? Why? 
 ===   (free form)
+No, When we switch the hardware saves e_flags on the stack and afterwards
+we store the value in the env trapframe, when we restore an environment we use
+iret and pop the env trapframe and restore it's e_flags register.
 
 === Q How long approximately did it take you to do this lab?
 ===   (number of hours for all partners combined)
