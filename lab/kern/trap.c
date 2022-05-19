@@ -267,6 +267,9 @@ trap_dispatch(struct Trapframe *tf)
 		lapic_eoi();
 		sched_yield();
 		break;
+	// Handle keyboard and serial interrupts.
+	// LAB 5: Your code here.
+
 	default:
 		// Unexpected trap: The user process or the kernel has a bug.
 		print_trapframe(tf);
