@@ -26,3 +26,9 @@ We implemented, from scratch, a minimalistic yet fully functional operating syst
     - Spawning Processes: Sharing library state across fork and spawn
     - Keyboard Interface
     - Shell Commands
+- Lab 6: Network Driver
+    - Initialization and transmitting packets
+    - Receiving packets and the web server
+- Project:
+    - VGA
+    - Mouse
