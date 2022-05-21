@@ -17,6 +17,13 @@ va_is_mapped(void *va)
 	return (uvpd[PDX(va)] & PTE_P) && (uvpt[PGNUM(va)] & PTE_P);
 }
 
+// Is this virtual address accessed?
+bool
+va_is_accessed(void *va)
+{
+	return (uvpt[PGNUM(va)] & PTE_A) != 0;
+}
+
 // Is this virtual address dirty?
 bool
 va_is_dirty(void *va)
@@ -137,5 +144,33 @@ bc_init(void)
 
 	// cache the super block by reading it once
 	memmove(&super, diskaddr(1), sizeof super);
+}
+
+
+//clean the block cache
+void
+bc_clean(void){
+	uint32_t addr;
+	int err;
+
+	for (addr = DISKMAP; addr < DISKMAP + DISKSIZE; addr += BLKSIZE) {
+		if (va_is_mapped((void *)addr)) {
+			if(va_is_accessed((void *)addr)) {
+				// Clear the accessed bit for the disk block page
+				err = sys_page_map(0, (void *)addr, 0, (void *)addr, uvpt[PGNUM(addr)] & PTE_SYSCALL & ~(PTE_A));
+				if (err < 0) {
+					panic("in bc_clean, sys_page_map: %e", err);
+				}
+			} else {
+				if (va_is_dirty((void *)addr)) {
+					flush_block((void *)addr);
+				}
+				err = sys_page_unmap(0, (void *)addr);
+				if (err < 0) {
+					panic("in bc_clean, sys_page_unmap: %e", err);
+				}
+			}
+		}
+	}
 }
 

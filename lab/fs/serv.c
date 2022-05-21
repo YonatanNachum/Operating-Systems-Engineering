@@ -11,6 +11,12 @@
 
 #define debug 0
 
+/* Eviction Policy:
+ * Must be above 1000 to prevent race conditions in large files read.
+ */
+//#define EVICT_CHALLENGE
+#define CACHE_EVICT_MAX	1000
+
 // The file system server maintains three structures
 // for each open file.
 //
@@ -322,6 +328,7 @@ serve(void)
 	uint32_t req, whom;
 	int perm, r;
 	void *pg;
+	uint32_t clean_cache_cnt = 0;
 
 	while (1) {
 		perm = 0;
@@ -348,6 +355,12 @@ serve(void)
 		}
 		ipc_send(whom, r, pg, perm);
 		sys_page_unmap(0, fsreq);
+#ifdef EVICT_CHALLENGE
+		if (++clean_cache_cnt == CACHE_EVICT_MAX) {
+			bc_clean();
+			clean_cache_cnt = 0;
+		}
+#endif
 	}
 }
 
