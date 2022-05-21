@@ -14,11 +14,14 @@
 
 === Q How much disk space can be addressed by a single bitmap block
 ===   when size of a block is 4KB? (number in _bytes_)
+134217728
 
 === Q How much disk space can be addressed by a single bitmap block
 ===   when size of a block is 512B? (number in _bytes_)
+2097152
 
 === Q What is a maximum supported file size in JOS FS? (number in _bytes_)
+4235264
 
 === Q Did you have to do anything else to ensure that the I/O
 ===   privilege setting is saved and restored properly when you
@@ -30,14 +33,30 @@ iret and pop the env trapframe and restore it's e_flags register.
 
 === Q How long approximately did it take you to do this lab?
 ===   (number of hours for all partners combined)
+24
 
 ====================================================================
 === Q What challenge(s) have you chosen to implement? (specify
 ===   challenge numbers separated by spaces, if more than one)
+2
 
 === Q If the challenge requires changing the kernel source, list the
 ===   files which you have changed/added during implementation.
 ===   (one file per line, relative to lab directory containing .git/)
+fs/bc.c
+fs/fs.h
+fs/serv.c
 
 === Q Describe you solution.
 ===   (free form, up to 500 words, don't need to use all 500!)
+We created a function called bc_clean that iterates through all the block cache
+and checks if a block is accessed, if it is accessed than we remove the accessed bit
+from it and continue to the next block. If the block isn't accessed than we evict it from
+the memory and if dirty we will write it to the disk before.
+The file system env acts like a server who is listening on the ipc for request to the disk,
+so every access to the disk goes through it. Because of it, in serve.c at serve function each
+time we complete CACHE_EVICT_MAX of file system requests we call bc_clean() which unmap all the
+pages we haven't accessed in the last CACHE_EVICT_MAX calls. This way we remove unnecessary pages
+and free memory.
+
+To enable the feature remove comment from EVICT_CHALLENGE macro in serv.c.
