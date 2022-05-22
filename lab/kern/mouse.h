@@ -19,8 +19,6 @@
 #define MOUSE_STATUS_REG	0x64 /* READ */
 #define MOUSE_COMMAND_REG	0x64 /* WRITE */
 
-extern struct mousePos MousePos;
-
 void mouse_init(void);
 void mouse_intr(void);
 #endif /* _MOUSE_H_ */

@@ -9,22 +9,51 @@
 #include <kern/vga.h>
 #include <kern/time.h>
 
+#define MOUSE_HEIGHT 	18
+#define MOUSE_WIDTH 	15
 
-struct mousePos {
-	int x;
-	int y;
+typedef struct MousePos {
+    int x;
+    int y;
 } MousePos;
 
+MousePos curr_pos = {0, 0};
+MousePos prev_pos = {0, 0};
+
 static struct {
-	int x_sgn, y_sgn, x_mov, y_mov;
-	int l_btn, r_btn, m_btn;
-	int x_overflow, y_overflow;
+	uint8_t x_sgn, y_sgn;
+	uint8_t l_btn, r_btn, m_btn;
+	uint8_t x_overflow, y_overflow;
+	int  x_mov, y_mov;
 	unsigned int tick;
 } packet;
 
-static int count;
-static int recovery;
 static int lastbtn, lastdowntick, lastclicktick;
+static int recovery;
+
+uint8_t mouse_pointer[MOUSE_HEIGHT][MOUSE_WIDTH] =
+    {
+        {2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {2, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {2, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {2, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {2, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {2, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0},
+        {2, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0},
+        {2, 1, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0},
+        {2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0},
+        {2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0},
+        {2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0},
+        {2, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 0, 0, 0},
+        {2, 1, 1, 1, 2, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0},
+        {2, 1, 1, 2, 0, 2, 1, 1, 2, 0, 0, 0, 0, 0, 0},
+        {2, 1, 2, 0, 0, 2, 1, 1, 2, 0, 0, 0, 0, 0, 0},
+        {2, 2, 0, 0, 0, 0, 2, 1, 1, 2, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 2, 1, 1, 2, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0}
+    };
+
+uint8_t mouse_color[2];
 
 /* Checks buffers status in the PS/2 controller:
  * type = 0 - 	Output buffer status (0 = empty, 1 = full)
@@ -78,51 +107,11 @@ void
 mouse_init(void)
 {
 	uint8_t statustemp;
-	/* Disable Devices */
-	//mouse_wait(1);
-	//outb(MOUSE_COMMAND_REG, 0xAD);
-	// mouse_wait(1);
-	// outb(MOUSE_COMMAND_REG, 0xA7);
-
-	/* Flush The Output Buffer */
-	// mouse_wait(0);
-
-	/* Set the Controller Configuration Byte -
-	 * disable all IRQs and disable translation 
-	 */
-	// mouse_wait(1);
-	// outb(MOUSE_COMMAND_REG, 0x20);
-	// statustemp = mouse_read() & ~(0x43);
-	// mouse_wait(1);
-	// outb(MOUSE_COMMAND_REG, 0x60);
-	// mouse_wait(1);
-	// outb(MOUSE_DATA_REG, statustemp);
-	
-	// /* Perform Controller Self Test */
-	// mouse_wait(1);
-	// outb(MOUSE_COMMAND_REG, 0xAA);
-	// if (mouse_read() != 0x55) {
-	// 	//panic("PS/2 controller self test failed\n");
-	// }
-	// mouse_wait(1);
-	// outb(MOUSE_COMMAND_REG, 0x60);
-	// mouse_wait(1);
-	// outb(MOUSE_DATA_REG, statustemp);
-
-	// /* Perform Interface Tests */
-	// mouse_wait(1);
-	// outb(MOUSE_COMMAND_REG, 0xA9);
-	// if (mouse_read() != 0) {
-	// 	//panic("PS/2 controller interface test failed\n");
-	// }
-
-	/* Enable first PS/2 port */
-	//mouse_wait(1);
-	//outb(MOUSE_COMMAND_REG, 0xAE);
 
 	/* Enable second PS/2 port (only if 2 PS/2 ports supported) */
 	mouse_wait(1);
 	outb(MOUSE_COMMAND_REG, 0xA8);
+	mouse_read();
 
 	/* Commands 0x20 and 0x60 let you read and write the PS/2 Controller Configuration Byte:
 	* Bit 0 - First PS/2 port interrupt (1 = enabled, 0 = disabled)
@@ -137,63 +126,114 @@ mouse_init(void)
 	mouse_wait(1);
 	outb(MOUSE_DATA_REG, statustemp);
 
-	// /* Reset mouse */
-	// mouse_write(0XFF);
-	// if (mouse_read() != 0xFA) {
-	// 	//panic("Mouse reset failed\n");
-	// }
-
     	/* Set Defaults */
     	mouse_write(0xF6);
     	mouse_read();
 
-    	/* Set Sample rate to 10 */
-	/*mouse_write(0xF3);
+    	/* Set Sample rate to 100 */
+	mouse_write(0xF3);
     	mouse_read();
     	mouse_write(10);
-    	mouse_read();*/
+    	mouse_read();
+
+    	/* Set Resolution */
+	mouse_write(0xE8);
+    	mouse_read();
+    	mouse_write(0x3);
+    	mouse_read();
 
     	/* Enable Data Reporting */
     	mouse_write(0xF4);
+	mouse_read();
+
 	irq_setmask_8259A(irq_mask_8259A & ~(1<<12));
 
-    	count = 0;
+    	mouse_color[0] = 7;
+	mouse_color[1] = 15;
+
     	lastclicktick = lastdowntick = -1000;
 }
 
-typedef struct message {
-    int msg_type;
-    int params[10];
-} message;
-/*
-void
-genMouseUpMessage(int btns)
-{
-  message msg;
-  msg.msg_type = M_MOUSE_UP;
-  msg.params[0] = btns;
-  handleMessage(&msg);
+void 
+clearMouse(int x, int y) {
+    	int i, j;
+	uint8_t *addr;
+
+    	for (i = 0; i < MOUSE_HEIGHT; i++) {
+        	if (y + i > SCREEN_HEIGHT || y + i < 0) {
+            		break;
+        	}
+        	for (j = 0; j < MOUSE_WIDTH; j++) {
+            		if (x + j > SCREEN_WIDTH || x + j < 0) {
+                		break;
+            		}
+            		uint8_t temp = mouse_pointer[i][j];
+            		if (temp) {
+                		addr = SCREEN_BASE_ADDR + (y + i) * SCREEN_WIDTH + x + j;
+				*addr = 0;
+            		}
+        	}
+    	}
 }
 
-void
-genMouseMessage()
+void 
+drawMouse(int x, int y) {
+    	int i, j;
+	uint8_t *addr;
+
+    	for (i = 0; i < MOUSE_HEIGHT; i++) {
+        	if (y + i >= SCREEN_HEIGHT || y + i < 0) {
+            		break;
+        	}
+        	for (j = 0; j < MOUSE_WIDTH; j++) {
+            		if (x + j >= SCREEN_WIDTH || x + j < 0) {
+                		break;
+            		}
+            		uint8_t temp = mouse_pointer[i][j];
+            		if (temp) {
+                		addr = SCREEN_BASE_ADDR + (y + i) * SCREEN_WIDTH + x + j;
+				*addr = mouse_color[temp - 1];
+            		}
+        	}
+    	}
+}
+
+static void
+mouse_command()
 {
 	if (packet.x_overflow || packet.y_overflow) {
 		return;
 	}
 
-  	int btns = packet.l_btn | (packet.r_btn << 1) | (packet.m_btn << 2);
-  	message msg;
-  	if (packet.x_mov || packet.y_mov) {
-		msg.msg_type = M_MOUSE_MOVE;
-		msg.params[0] = packet.x_mov;
-		msg.params[1] = packet.y_mov;
-		msg.params[2] = btns;
-		lastdowntick = lastclicktick = -1000;
+	int btns = packet.l_btn | (packet.r_btn << 1) | (packet.m_btn << 2);
+
+	if (packet.x_mov || packet.y_mov) {
+		cprintf("mouse pos: %u, %u\n", curr_pos.x, curr_pos.y);
+		cprintf("move: %d, %d\n", packet.x_mov, packet.y_mov);
+		prev_pos.x = curr_pos.x;
+		prev_pos.y = curr_pos.y;
+		curr_pos.x += (packet.x_mov >> 5);
+		curr_pos.y += -(packet.y_mov >> 5);
+		if (curr_pos.x < 0) {
+			curr_pos.x = 0;	
+		}
+		if (curr_pos.x > SCREEN_WIDTH) {
+			curr_pos.x = SCREEN_WIDTH;	
+		}
+		if (curr_pos.y < 0) {
+			curr_pos.y = 0;	
+		}
+		if (curr_pos.y > SCREEN_HEIGHT) {
+			curr_pos.y = SCREEN_HEIGHT;	
+		}
+		clearMouse(prev_pos.x, prev_pos.y);
+		drawMouse(curr_pos.x, curr_pos.y);
+
+		/* lastdowntick = lastclicktick = -1000;
 		if (btns != lastbtn) {
 			genMouseUpMessage(btns);
-		}
-  	} else if (btns) {
+		}*/
+  	} /* else if (btns) {
 		msg.msg_type = M_MOUSE_DOWN;
 		msg.params[0] = btns;
 		lastdowntick = packet.tick;
@@ -213,8 +253,8 @@ genMouseMessage()
     		genMouseUpMessage(btns);
 	}
 	lastbtn = btns;
-	handleMessage(&msg);
-}*/
+	handleMessage(&msg);*/
+}
 
 /*Mouse-to-host communication:
  * When in the streaming mode of operation, mouse will periodically send the data
@@ -232,28 +272,27 @@ Byte 2	********************************************* Y movement ****************
 void
 mouse_intr(void)
 {
-	cprintf("hello\n");
-	int state, first_byte = 0;
-	unsigned int ticks = time_msec() / 10;
+	int state, count = 0, first_byte = 0;
+	unsigned int ticks = time_msec();
 
 	/* As long as the Input buffer is full keep reading*/
 	while (((state = inb(MOUSE_STATUS_REG)) & 1) == 1) {
 		int data = inb(MOUSE_DATA_REG);
 		count++;
 
-		if (recovery == 0 && (data & 255) == 0) {
-			recovery = 1;
-		} else if (recovery == 1 && (data & 255) == 0) {
-			recovery = 2;
-		} else if ((data & 255) == 12) {
-			recovery = 0;
-		} else {
-			recovery = -1;
-		}
+	  	if (recovery == 0 && (data & 255) == 0)
+		  	recovery = 1;
+	  	else if (recovery == 1 && (data & 255) == 0)
+		  	recovery = 2;
+	  	else if ((data & 255) == 12)
+		  	recovery = 0;
+	  	else
+		 	recovery = -1;
 
     		switch (count) {
 		case 1: 
 			if(data & 0x08) {
+				ticks = time_msec();
 				packet.y_overflow = (data >> 7) & 0x1;
 				packet.x_overflow = (data >> 6) & 0x1;
 				packet.y_sgn = (data >> 5) & 0x1;
@@ -272,9 +311,20 @@ mouse_intr(void)
 			break;
 
 		case 3:
-			packet.y_mov = data - ((first_byte << 3) & 0x100);;
+			packet.y_mov = data - ((first_byte << 3) & 0x100); 
 			packet.tick = ticks;
 			break;
+
+		default:
+			count = 0;
+			break;
 		}
+		if (recovery == 2) {
+			count = 0;
+			recovery = -1;
+	  	} else if (count == 3) {
+			count = 0;
+			mouse_command();
+	  	}
 	}
 }
