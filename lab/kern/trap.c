@@ -13,6 +13,7 @@
 #include <kern/picirq.h>
 #include <kern/cpu.h>
 #include <kern/spinlock.h>
+#include <kern/time.h>
 
 static struct Taskstate ts;
 
@@ -260,6 +261,13 @@ trap_dispatch(struct Trapframe *tf)
 		cprintf("Spurious interrupt on irq 7\n");
 		print_trapframe(tf);
 		return;
+
+	// Add time tick increment to clock interrupts.
+	// Be careful! In multiprocessors, clock interrupts are
+	// triggered on every CPU.
+	// LAB 6: Your code here.
+
+
 	case IRQ_OFFSET + IRQ_TIMER:
 		// Handle clock interrupts. Don't forget to acknowledge the
 		// interrupt using lapic_eoi() before calling the scheduler!
