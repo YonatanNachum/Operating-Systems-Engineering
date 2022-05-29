@@ -28,7 +28,7 @@ static struct {
 	unsigned int tick;
 } packet;
 
-static int lastbtn, lastdowntick, lastclicktick;
+static int lastclicktick;
 static int recovery;
 
 uint8_t mouse_pointer[MOUSE_HEIGHT][MOUSE_WIDTH] =
@@ -120,7 +120,6 @@ mouse_init(void)
 	mouse_wait(1);
 	outb(MOUSE_COMMAND_REG, 0x20);
 	statustemp = mouse_read() | 2;
-	//cprintf("status: 0x%x!!\n", statustemp);
 	mouse_wait(1);
 	outb(MOUSE_COMMAND_REG, 0x60);
 	mouse_wait(1);
@@ -136,11 +135,11 @@ mouse_init(void)
     	mouse_write(10);
     	mouse_read();
 
-    	/* Set Resolution */
-	mouse_write(0xE8);
-    	mouse_read();
-    	mouse_write(0x3);
-    	mouse_read();
+    	// /* Set Resolution */
+	// mouse_write(0xE8);
+    	// mouse_read();
+    	// mouse_write(0x3);
+    	// mouse_read();
 
     	/* Enable Data Reporting */
     	mouse_write(0xF4);
@@ -151,7 +150,9 @@ mouse_init(void)
     	mouse_color[0] = 7;
 	mouse_color[1] = 15;
 
-    	lastclicktick = lastdowntick = -1000;
+    	lastclicktick = -1000;
+	curr_pos.x = SCREEN_WIDTH / 2;
+	curr_pos.y = SCREEN_HEIGHT / 2;
 }
 
 void 
@@ -208,8 +209,6 @@ mouse_command()
 	int btns = packet.l_btn | (packet.r_btn << 1) | (packet.m_btn << 2);
 
 	if (packet.x_mov || packet.y_mov) {
-		cprintf("mouse pos: %u, %u\n", curr_pos.x, curr_pos.y);
-		cprintf("move: %d, %d\n", packet.x_mov, packet.y_mov);
 		prev_pos.x = curr_pos.x;
 		prev_pos.y = curr_pos.y;
 		curr_pos.x += (packet.x_mov >> 5);
@@ -229,31 +228,30 @@ mouse_command()
 		clearMouse(prev_pos.x, prev_pos.y);
 		drawMouse(curr_pos.x, curr_pos.y);
 
-		/* lastdowntick = lastclicktick = -1000;
-		if (btns != lastbtn) {
-			genMouseUpMessage(btns);
-		}*/
-  	} /* else if (btns) {
-		msg.msg_type = M_MOUSE_DOWN;
-		msg.params[0] = btns;
-		lastdowntick = packet.tick;
-	} else if (packet.tick - lastdowntick < 30) {
-		if (lastbtn & 1) {
-			msg.msg_type = M_MOUSE_LEFT_CLICK;
-		} else {
-			msg.msg_type = M_MOUSE_RIGHT_CLICK;
+		//lastclicktick = -1000;
+  	}
+	if (btns) {
+		if (packet.l_btn) {
+			if (packet.tick - lastclicktick < 5) {
+				cprintf("hold\n");
+			} else if (packet.tick - lastclicktick < 200) {
+				cprintf("double\n");
+			} else {
+				cprintf("single\n");
+			}
 		}
-    		if (packet.tick - lastclicktick < 60) {
-      			msg.msg_type = M_MOUSE_DBCLICK;
-      			lastclicktick = -1000;
-    		} else {
-			lastclicktick = packet.tick;
+		if (packet.r_btn) { 
+			cprintf("Right Click\n");
 		}
-	} else {
-    		genMouseUpMessage(btns);
+		if (packet.m_btn) {
+			cprintf("Middle\n");
+			clearMouse(prev_pos.x, prev_pos.y);
+			drawMouse(curr_pos.x, curr_pos.y);
+			curr_pos.x = SCREEN_WIDTH / 2;
+			curr_pos.y = SCREEN_HEIGHT / 2;
+		}
+		lastclicktick = packet.tick;
 	}
-	lastbtn = btns;
-	handleMessage(&msg);*/
 }
 
 /*Mouse-to-host communication:

@@ -326,6 +326,7 @@ kbd_proc_data(void)
 	if (((status = inb(KBSTATP)) & KBS_DIB) == 0)
 		return -1;
 
+	/* Checks if this is a keyboard packet and not a mouse packet */
 	if (status & 0x20) {
 		return -1;
 	}
@@ -390,6 +391,7 @@ mouse_poll(void)
 	if (((status = inb(MOUSE_STATUS_REG)) & 1) == 0)
 		return;
 
+	/* Checks if this is a mouse packet and if so process it*/
 	if (status & 0x20) {
 		mouse_intr();
 	}
