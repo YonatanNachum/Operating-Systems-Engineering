@@ -143,12 +143,15 @@ mouse_init(void)
 
     	/* Enable Data Reporting */
     	mouse_write(0xF4);
-	mouse_read();
+	statustemp = mouse_read();
+    	if(statustemp != 0xFA) {
+        	panic("error: failed to enable mouse packet streaming\n");
+    	}
 
 	irq_setmask_8259A(irq_mask_8259A & ~(1<<12));
 
-    	mouse_color[0] = 7;
-	mouse_color[1] = 15;
+    	mouse_color[0] = VGA_GREY;
+	mouse_color[1] = VGA_WHITE;
 
     	lastclicktick = -1000;
 	curr_pos.x = SCREEN_WIDTH / 2;
@@ -156,32 +159,9 @@ mouse_init(void)
 }
 
 void 
-clearMouse(int x, int y) {
+drawMouse(int x, int y, bool clean) {
     	int i, j;
 	uint8_t *addr;
-
-    	for (i = 0; i < MOUSE_HEIGHT; i++) {
-        	if (y + i > SCREEN_HEIGHT || y + i < 0) {
-            		break;
-        	}
-        	for (j = 0; j < MOUSE_WIDTH; j++) {
-            		if (x + j > SCREEN_WIDTH || x + j < 0) {
-                		break;
-            		}
-            		uint8_t temp = mouse_pointer[i][j];
-            		if (temp) {
-                		addr = SCREEN_BASE_ADDR + (y + i) * SCREEN_WIDTH + x + j;
-				*addr = 0;
-            		}
-        	}
-    	}
-}
-
-void 
-drawMouse(int x, int y) {
-    	int i, j;
-	uint8_t *addr;
-
     	for (i = 0; i < MOUSE_HEIGHT; i++) {
         	if (y + i >= SCREEN_HEIGHT || y + i < 0) {
             		break;
@@ -190,10 +170,15 @@ drawMouse(int x, int y) {
             		if (x + j >= SCREEN_WIDTH || x + j < 0) {
                 		break;
             		}
+			
             		uint8_t temp = mouse_pointer[i][j];
             		if (temp) {
                 		addr = SCREEN_BASE_ADDR + (y + i) * SCREEN_WIDTH + x + j;
-				*addr = mouse_color[temp - 1];
+				if (clean) {
+					*addr = VGA_BLACK;
+				} else {
+					*addr = mouse_color[temp - 1];
+				}	
             		}
         	}
     	}
@@ -225,8 +210,8 @@ mouse_command()
 		if (curr_pos.y > SCREEN_HEIGHT) {
 			curr_pos.y = SCREEN_HEIGHT;	
 		}
-		clearMouse(prev_pos.x, prev_pos.y);
-		drawMouse(curr_pos.x, curr_pos.y);
+		drawMouse(prev_pos.x, prev_pos.y, true);
+		drawMouse(curr_pos.x, curr_pos.y, false);
 
 		//lastclicktick = -1000;
   	}
@@ -245,8 +230,8 @@ mouse_command()
 		}
 		if (packet.m_btn) {
 			cprintf("Middle\n");
-			clearMouse(prev_pos.x, prev_pos.y);
-			drawMouse(curr_pos.x, curr_pos.y);
+			drawMouse(prev_pos.x, prev_pos.y, true);
+			drawMouse(curr_pos.x, curr_pos.y, false);
 			curr_pos.x = SCREEN_WIDTH / 2;
 			curr_pos.y = SCREEN_HEIGHT / 2;
 		}

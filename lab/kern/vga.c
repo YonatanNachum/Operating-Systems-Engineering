@@ -42,30 +42,15 @@
 
 static void clear_screen(void);
 
-static void
+void
 write_pixel(uint32_t x, uint32_t y, uint8_t color)
 {
 	uint8_t *off;
 	off = SCREEN_BASE_ADDR + SCREEN_WIDTH * y + x;
-	*off = color;
+	if (off < SCREEN_MAX_ADDR) {
+		*off = color;
+	}
 }
-
-// void
-// draw_pixel(uint32_t x, uint32_t y)
-// {
-// 	unsigned x, y;
-// 	uint32_t g_ht = 200, g_wd = 320;
-// /* clear screen */
-// 	for(y = 0; y < g_ht; y++)
-// 		for(x = 0; x < g_wd; x++)
-// 			write_pixel(x, y, 0);
-// /* draw 2-color X */
-// 	for(y = 0; y < g_ht; y++)
-// 	{
-// 		write_pixel((g_wd - g_ht) / 2 + y, y, 1);
-// 		write_pixel((g_ht + g_wd) / 2 - y, y, 2);
-// 	}
-// }
 
 static void
 clear_screen (void)
@@ -227,4 +212,35 @@ vga_init(void)
 	inb(ATTR_RESET_REG);
 	outb(ATTR_ADDR_REG, 0x20);
         clear_screen();
+}
+
+static void 
+draw_bresenham_circle(int xc, int yc, int x, int y, uint8_t color) 
+{ 
+	write_pixel(xc+x, yc+y, color); 
+	write_pixel(xc-x, yc+y, color); 
+	write_pixel(xc+x, yc-y, color); 
+	write_pixel(xc-x, yc-y, color); 
+	write_pixel(xc+y, yc+x, color); 
+	write_pixel(xc-y, yc+x, color); 
+	write_pixel(xc+y, yc-x, color); 
+	write_pixel(xc-y, yc-x, color); 
+} 
+
+void 
+draw_circle(uint16_t x, uint16_t y, uint16_t radius, uint8_t color)
+{
+	int x2 = 0, y2 = radius;
+	int d = 3 - 2 * radius;
+	draw_bresenham_circle(x, y, x2, y2, color);
+	while (y2 >= x2) {
+		x2++;
+		if (d > 0) {
+			y2--;
+			d = d + 4 * (x2 - y2) + 10;
+		} else {
+			d = d + 4 * x2 + 6;
+		} 
+		draw_bresenham_circle(x, y, x2, y2, color);
+  	} 
 }
