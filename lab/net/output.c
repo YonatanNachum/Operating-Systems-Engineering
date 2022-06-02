@@ -14,8 +14,6 @@ output(envid_t ns_envid)
 	//	- send the packet to the device driver
 	uint32_t req, whom;
 	int perm, r;
-	int r;
-
 	while (1) {
 		req = ipc_recv((int32_t *) &whom, &nsipcbuf, &perm);
 		if (whom != ns_envid) {

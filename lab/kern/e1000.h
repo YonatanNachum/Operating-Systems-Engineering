@@ -7,7 +7,7 @@
 #include <inc/string.h>
 #include <inc/error.h>
 
-#define E1000_VENODR_ID 0x08086
+#define E1000_VENODR_ID 0x8086
 #define E1000_DEVICE_ID 0x100E
 
 #define TX_DESC_POOL_SIZE       64
@@ -18,7 +18,7 @@
  * These registers are physically located on the NIC, but are mapped into the
  * host memory address space.
  */
-#define E1000_STATUS    0x00008  /* Device Status - RO */
+#define E1000_STATUS   0x00008  /* Device Status - RO */
 #define E1000_TDBAL    0x03800  /* TX Descriptor Base Address Low - RW */
 #define E1000_TDBAH    0x03804  /* TX Descriptor Base Address High - RW */
 #define E1000_TDLEN    0x03808  /* TX Descriptor Length - RW */
@@ -41,26 +41,14 @@
 #define E1000_TCTL_MULR   0x10000000    /* Multiple request support */
 
 /* Transmit Descriptor bit definitions */
-#define E1000_TXD_DTYP_D     0x00100000 /* Data Descriptor */
-#define E1000_TXD_DTYP_C     0x00000000 /* Context Descriptor */
-#define E1000_TXD_POPTS_IXSM 0x01       /* Insert IP checksum */
-#define E1000_TXD_POPTS_TXSM 0x02       /* Insert TCP/UDP checksum */
-#define E1000_TXD_CMD_EOP    0x01000000 /* End of Packet */
-#define E1000_TXD_CMD_IFCS   0x02000000 /* Insert FCS (Ethernet CRC) */
-#define E1000_TXD_CMD_IC     0x04000000 /* Insert Checksum */
-#define E1000_TXD_CMD_RS     0x08000000 /* Report Status */
-#define E1000_TXD_CMD_RPS    0x10000000 /* Report Packet Sent */
-#define E1000_TXD_CMD_DEXT   0x20000000 /* Descriptor extension (0 = legacy) */
-#define E1000_TXD_CMD_VLE    0x40000000 /* Add VLAN tag */
-#define E1000_TXD_CMD_IDE    0x80000000 /* Enable Tidv register */
-#define E1000_TXD_STAT_DD    0x00000001 /* Descriptor Done */
-#define E1000_TXD_STAT_EC    0x00000002 /* Excess Collisions */
-#define E1000_TXD_STAT_LC    0x00000004 /* Late Collisions */
-#define E1000_TXD_STAT_TU    0x00000008 /* Transmit underrun */
-#define E1000_TXD_CMD_TCP    0x01000000 /* TCP packet */
-#define E1000_TXD_CMD_IP     0x02000000 /* IP packet */
-#define E1000_TXD_CMD_TSE    0x04000000 /* TCP Seg enable */
-#define E1000_TXD_STAT_TC    0x00000004 /* Tx Underrun */
+#define E1000_TXD_CMD_EOP    0x1        /* End of Packet */
+#define E1000_TXD_CMD_RS     0x8        /* Report Status */
+#define E1000_TXD_CMD_DEXT   0x20       /* Descriptor extension (0 = legacy) */
+
+#define E1000_TXD_STAT_DD    0x1        /* Descriptor Done */
+#define E1000_TXD_STAT_EC    0x2        /* Excess Collisions */
+#define E1000_TXD_STAT_LC    0x4        /* Late Collisions */
+#define E1000_TXD_STAT_TU    0x8        /* Transmit underrun */
 
 struct e1000_tx_desc
 {

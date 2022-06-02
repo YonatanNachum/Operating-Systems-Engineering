@@ -13,7 +13,7 @@ char tx_buf_array[TX_DESC_POOL_SIZE][TX_PACKET_SIZE];
 static void
 e1000_tx_init()
 {
-        uint32_t TCTL_COLD_flag_value, TCTL_CT_flag_value, i;
+        uint32_t i;
 
         memset(tx_desc_pool, 0, sizeof(tx_desc_pool));
 
@@ -24,15 +24,16 @@ e1000_tx_init()
                 panic("e1000_tx_init: sizeof tx_desc_pool not aligned to 128 bytes size: [0x%8x]\n",
                       sizeof(tx_desc_pool));
         }
+
         // Intializing pool ring
         e1000_bar0[INDEX2OFFSET(E1000_TDLEN)] = sizeof(tx_desc_pool);
         e1000_bar0[INDEX2OFFSET(E1000_TDH)] = 0;
         e1000_bar0[INDEX2OFFSET(E1000_TDT)] = 0;
+
         // Initializing flags
-        TCTL_COLD_flag_value = E1000_TCTL_COLD & (0x40 << 12);
-        TCTL_CT_flag_value = E1000_TCTL_CT & (0x10 << 4);
-        e1000_bar0[INDEX2OFFSET(E1000_TCTL)] |= (E1000_TCTL_EN | E1000_TCTL_PSP | TCTL_COLD_flag_value |
-                                                 TCTL_CT_flag_value);
+        e1000_bar0[INDEX2OFFSET(E1000_TCTL)] = (E1000_TCTL_EN | E1000_TCTL_PSP | (E1000_TCTL_COLD & (0x40 << 12)) |
+                                                (E1000_TCTL_CT & (0x10 << 4)));
+
         /* Transmit IPG:
          *  The value that should be programmed into IPGT is 10
          *  According to the IEEE802.3 standard, IPGR1 should be 2/3 of IPGR2 value.
@@ -42,7 +43,7 @@ e1000_tx_init()
 
         for (i = 0; i < TX_DESC_POOL_SIZE; ++i) {
 		tx_desc_pool[i].addr = PADDR(tx_buf_array[i]);
-		tx_desc_pool[i].cmd |= E1000_TXD_CMD_RS;
+		tx_desc_pool[i].cmd |= E1000_TXD_CMD_RS | E1000_TXD_CMD_EOP;
 		tx_desc_pool[i].status |= E1000_TXD_STAT_DD;
 	}
 }
@@ -66,15 +67,15 @@ int
 e1000_transmit(void *data, uint16_t len)
 {
         uint32_t tail_index;
-
+        
         tail_index = e1000_bar0[INDEX2OFFSET(E1000_TDT)];
         if ((tx_desc_pool[tail_index].status & E1000_TXD_STAT_DD) == 0) {
                 return -E_TX_POOL_FULL;
         }
-        if (len > TX_PACKET_SIZE ) {
+        if (len > TX_PACKET_SIZE) {
                 return -E_INVAL;
         }
-        memmove(tx_desc_pool[tail_index].addr, data, len);
+        memmove(tx_buf_array[tail_index], data, len);
         tx_desc_pool[tail_index].length = len;
         tx_desc_pool[tail_index].status &= (~E1000_TXD_STAT_DD);
         e1000_bar0[INDEX2OFFSET(E1000_TDT)] = (tail_index + 1) % TX_DESC_POOL_SIZE;
