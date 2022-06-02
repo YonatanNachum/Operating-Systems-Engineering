@@ -19,6 +19,7 @@ enum {
 	SYS_ipc_recv,
 	SYS_time_msec,
 	SYS_change_priority,
+	SYS_try_transmit,
 	NSYSCALLS
 };
 

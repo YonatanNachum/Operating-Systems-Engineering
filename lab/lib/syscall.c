@@ -128,3 +128,9 @@ sys_change_priority(uint8_t p)
 {
 	return syscall(SYS_change_priority, 0, p, 0, 0, 0, 0);
 }
+
+int
+sys_try_transmit(void *data, uint16_t len)
+{
+	return syscall(SYS_try_transmit, 0, (uint32_t)data, len, 0, 0, 0);
+}

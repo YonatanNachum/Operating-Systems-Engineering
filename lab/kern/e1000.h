@@ -5,6 +5,7 @@
 #include <kern/pci.h>
 #include <kern/pmap.h>
 #include <inc/string.h>
+#include <inc/error.h>
 
 #define E1000_VENODR_ID 0x08086
 #define E1000_DEVICE_ID 0x100E
@@ -74,5 +75,5 @@ struct e1000_tx_desc
 
 
 int e1000_attach(struct pci_func *pcif);
-
+int e1000_transmit(void *data, uint16_t len);
 #endif	// JOS_KERN_E1000_H
