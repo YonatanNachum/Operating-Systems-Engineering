@@ -267,14 +267,17 @@ trap_dispatch(struct Trapframe *tf)
 	// triggered on every CPU.
 	// LAB 6: Your code here.
 
-
 	case IRQ_OFFSET + IRQ_TIMER:
 		// Handle clock interrupts. Don't forget to acknowledge the
 		// interrupt using lapic_eoi() before calling the scheduler!
 		// LAB 4: Your code here.
 		lapic_eoi();
+		if (cpunum() == 0) {
+			time_tick();
+		}
 		sched_yield();
 		break;
+
 	// Handle keyboard and serial interrupts.
 	// LAB 5: Your code here.
 	case IRQ_OFFSET + IRQ_KBD:
