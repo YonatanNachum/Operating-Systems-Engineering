@@ -8,6 +8,10 @@ volatile uint32_t *e1000_bar0;
 struct e1000_tx_desc tx_desc_pool[TX_DESC_POOL_SIZE];
 char tx_buf_array[TX_DESC_POOL_SIZE][TX_PACKET_SIZE];
 
+struct e1000_tx_desc rx_desc_pool[RX_DESC_POOL_SIZE];
+char rx_buf_array[RX_DESC_POOL_SIZE][RX_PACKET_SIZE];
+
+uint8_t e1000_mac[6] = {0x52, 0x54, 0x00, 0x12, 0x34, 0x56};
 // LAB 6: Your driver code here
 
 static void
@@ -48,10 +52,77 @@ e1000_tx_init()
 	}
 }
 
+static void
+e1000_config_mac()
+{
+       uint32_t low = 0, high = 0;
+       int i;
+
+        for (i = 0; i < 4; i++) {
+                low |= e1000_mac[i] << (8 * i);
+        }
+
+        for (i = 4; i < 6; i++) {
+                high |= e1000_mac[i] << (8 * i);
+        }
+
+        e1000_bar0[INDEX2OFFSET(E1000_RAL)] = low;
+
+        /* Address Valid(E1000_RAH_AV):
+         * Determines whether this address is compared against the
+         * incoming packet. When set, the address is valid and is
+         * compared against the incoming packet. When cleared, the
+         * address is invalid and is not compared against the received packet.
+         */
+        e1000_bar0[INDEX2OFFSET(E1000_RAH)] = high | E1000_RAH_AV;
+}
+
+static void
+e1000_rx_init()
+{
+        uint32_t i;
+
+        memset(rx_desc_pool, 0, sizeof(rx_desc_pool));
+
+        e1000_config_mac();
+
+        // Initialize the MTA
+        e1000_bar0[INDEX2OFFSET(E1000_MTA)] = 0;
+
+        // Intializing pool adresses
+        e1000_bar0[INDEX2OFFSET(E1000_RDBAL)] = PADDR(rx_desc_pool);
+        e1000_bar0[INDEX2OFFSET(E1000_RDBAH)] = 0;
+        if (sizeof(rx_desc_pool) % 128 != 0 ) {
+                panic("e1000_rx_init: sizeof tx_desc_pool not aligned to 128 bytes size: [0x%8x]\n",
+                      sizeof(rx_desc_pool));
+        }
+
+        // Intializing pool ring
+        e1000_bar0[INDEX2OFFSET(E1000_RDLEN)] = sizeof(rx_desc_pool);
+        e1000_bar0[INDEX2OFFSET(E1000_RDH)] = 0;
+        e1000_bar0[INDEX2OFFSET(E1000_RDT)] = RX_DESC_POOL_SIZE - 1;
+
+        /* Initializing Receive Control fields:
+         * Receiver Enable = 1
+         * Store Bad Packets = 0
+         * Long Packet Reception Enable = 0
+         * Loopback mode = No loopback
+         * Receive Descriptor Minimum Threshold Size = 0
+         * Broadcast Accept Mode = 1
+         * Receive Buffer Size = 2048
+         * Strip Ethernet CRC from incoming packet = Strip CRC field
+         */
+        e1000_bar0[INDEX2OFFSET(E1000_RCTL)] = E1000_RCTL_EN | E1000_RCTL_SZ_2048 | E1000_RCTL_BAM | E1000_RCTL_SECRC;
+
+        for (i = 0; i < RX_DESC_POOL_SIZE; ++i) {
+		rx_desc_pool[i].addr = PADDR(rx_buf_array[i]);
+	}
+}
+
 int
 e1000_attach(struct pci_func *pcif)
 {
-        uint32_t status_reg;
+        uint32_t status_reg, clean_icr;
 
         pci_func_enable(pcif);
         e1000_bar0 = (uint32_t *)mmio_map_region(pcif->reg_base[0], pcif->reg_size[0]);
@@ -60,6 +131,17 @@ e1000_attach(struct pci_func *pcif)
                 panic("e1000_attach: memory map error, E1000 status[0x%8x]\n", status_reg);
         }
         e1000_tx_init();
+        e1000_rx_init();
+
+        /* ICR register bits are cleared upon read */
+        clean_icr = e1000_bar0[INDEX2OFFSET(E1000_ICR)];
+
+        /* Program the Interrupt Mask Set/Read:
+         * Receiver Timer Interrupt (ICR.RXT0)
+         * Descriptor done [Transmit Descriptor Write-back (TXDW)] 
+         */
+        e1000_bar0[INDEX2OFFSET(E1000_IMS)] = E1000_ICR_TXDW | E1000_ICR_RXT0;
+        irq_setmask_8259A(irq_mask_8259A & ~(1<<11));
         return 0;
 }
 
@@ -80,4 +162,18 @@ e1000_transmit(void *data, uint16_t len)
         tx_desc_pool[tail_index].status &= (~E1000_TXD_STAT_DD);
         e1000_bar0[INDEX2OFFSET(E1000_TDT)] = (tail_index + 1) % TX_DESC_POOL_SIZE;
         return 0;
+}
+
+void
+e1000_intr()
+{
+        uint32_t intr_status;
+
+        intr_status = e1000_bar0[INDEX2OFFSET(E1000_ICR)];
+        if (intr_status & E1000_ICR_TXDW) {
+
+        }
+        if (intr_status & E1000_ICR_RXT0) {
+                
+        }
 }

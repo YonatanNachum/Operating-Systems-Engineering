@@ -121,10 +121,13 @@ UNI_TRAPHANDLER(kbd_handler, IRQ_OFFSET + IRQ_KBD)
 UNI_TRAPHANDLER(serial_handler, IRQ_OFFSET + IRQ_SERIAL)
 .data
 	.space 8
-UNI_TRAPHANDLER(timer_spurious, IRQ_OFFSET + IRQ_SPURIOUS)
+UNI_TRAPHANDLER(spurious_handler, IRQ_OFFSET + IRQ_SPURIOUS)
 .data
-	.space 24
-UNI_TRAPHANDLER(ide_spurious, IRQ_OFFSET + IRQ_IDE)
+	.space 12
+UNI_TRAPHANDLER(e1000_handler, IRQ_OFFSET + IRQ_E1000)
+.data
+	.space 8
+UNI_TRAPHANDLER(ide_handler, IRQ_OFFSET + IRQ_IDE)
 .data
 	.space 4
 UNI_TRAPHANDLER(syscall_handler, T_SYSCALL)

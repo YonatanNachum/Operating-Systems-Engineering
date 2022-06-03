@@ -14,6 +14,7 @@
 #include <kern/cpu.h>
 #include <kern/spinlock.h>
 #include <kern/time.h>
+#include <kern/e1000.h>
 
 static struct Taskstate ts;
 
@@ -134,6 +135,7 @@ trap_init(void)
 	SETGATE(idt[IRQ_OFFSET + IRQ_KBD], 0, GD_KT, handlers[IRQ_OFFSET + IRQ_KBD], 0);
 	SETGATE(idt[IRQ_OFFSET + IRQ_SERIAL], 0, GD_KT, handlers[IRQ_OFFSET + IRQ_SERIAL], 0);
 	SETGATE(idt[IRQ_OFFSET + IRQ_SPURIOUS], 0, GD_KT, handlers[IRQ_OFFSET + IRQ_SPURIOUS], 0);
+	SETGATE(idt[IRQ_OFFSET + IRQ_E1000], 0, GD_KT, handlers[IRQ_OFFSET + IRQ_E1000], 0);
 	SETGATE(idt[IRQ_OFFSET + IRQ_IDE], 0, GD_KT, handlers[IRQ_OFFSET + IRQ_IDE], 0);
 	SETGATE(idt[IRQ_OFFSET + IRQ_ERROR], 0, GD_KT, handlers[IRQ_OFFSET + IRQ_ERROR], 0);
 
@@ -288,6 +290,11 @@ trap_dispatch(struct Trapframe *tf)
 	case IRQ_OFFSET + IRQ_SERIAL:
 		lapic_eoi();
 		serial_intr();
+		break;
+
+	case IRQ_OFFSET + IRQ_E1000:
+		lapic_eoi();
+		e1000_intr();
 		break;
 
 	default:
