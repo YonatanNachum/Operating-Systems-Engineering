@@ -43,6 +43,8 @@ enum EnvType {
 	ENV_TYPE_USER = 0,
 	ENV_TYPE_FS,		// File system server
 	ENV_TYPE_NS,		// Network server
+	ENV_TYPE_OUT_NS,	// Network output server
+	ENV_TYPE_IN_NS,		// Network input server
 };
 
 struct Env {

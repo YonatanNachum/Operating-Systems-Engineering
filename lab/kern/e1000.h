@@ -77,6 +77,10 @@
 #define E1000_TXD_STAT_LC    0x4        /* Late Collisions */
 #define E1000_TXD_STAT_TU    0x8        /* Transmit underrun */
 
+/* Receive Descriptor bit definitions */
+#define E1000_RXD_STAT_DD       0x01    /* Descriptor Done */
+#define E1000_RXD_STAT_EOP      0x02    /* End of Packet */
+
 struct e1000_tx_desc
 {
         uint64_t addr;
@@ -101,6 +105,7 @@ struct e1000_rx_desc
 
 int e1000_attach(struct pci_func *pcif);
 int e1000_transmit(void *data, uint16_t len);
+int e1000_receive(void *data);
 void e1000_intr();
 
 #endif	// JOS_KERN_E1000_H

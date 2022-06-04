@@ -35,6 +35,7 @@ enum {
 
 	// The following message passes no page
 	NSREQ_TIMER,
+	NSREQ_COMPLETE,
 };
 
 union Nsipc {

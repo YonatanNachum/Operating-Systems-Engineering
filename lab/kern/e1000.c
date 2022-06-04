@@ -1,4 +1,8 @@
 #include <kern/e1000.h>
+#include <kern/trap.h>
+#include <kern/env.h>
+
+#include <inc/env.h>
 
 #define INDEX2OFFSET(index)     (index >> 2)
 #define E1000_MAP_STATUS        0x80080783 
@@ -141,7 +145,8 @@ e1000_attach(struct pci_func *pcif)
          * Descriptor done [Transmit Descriptor Write-back (TXDW)] 
          */
         e1000_bar0[INDEX2OFFSET(E1000_IMS)] = E1000_ICR_TXDW | E1000_ICR_RXT0;
-        irq_setmask_8259A(irq_mask_8259A & ~(1<<11));
+        assert(IRQ_E1000 == pcif->irq_line);
+        irq_setmask_8259A(irq_mask_8259A & ~(1<<pcif->irq_line));
         return 0;
 }
 
@@ -164,6 +169,23 @@ e1000_transmit(void *data, uint16_t len)
         return 0;
 }
 
+int
+e1000_receive(void *data)
+{
+        uint32_t tail_index;
+        static uint32_t head_index = 0;
+
+        tail_index = e1000_bar0[INDEX2OFFSET(E1000_RDT)];
+        if ((rx_desc_pool[head_index].status & E1000_RXD_STAT_DD) == 0) {
+                return -E_RX_POOL_EMPTY;
+        }
+        memmove(data, rx_buf_array[head_index], rx_desc_pool[head_index].length);
+        rx_desc_pool[head_index].status &= (~(E1000_RXD_STAT_DD | E1000_RXD_STAT_EOP));
+        e1000_bar0[INDEX2OFFSET(E1000_RDT)] = (tail_index + 1) % RX_DESC_POOL_SIZE;
+        head_index = (head_index + 1) % RX_DESC_POOL_SIZE;
+        return rx_desc_pool[head_index].length;
+}
+
 void
 e1000_intr()
 {
@@ -171,9 +193,9 @@ e1000_intr()
 
         intr_status = e1000_bar0[INDEX2OFFSET(E1000_ICR)];
         if (intr_status & E1000_ICR_TXDW) {
-
+                env_change_to_runnable_by_type(ENV_TYPE_OUT_NS);
         }
         if (intr_status & E1000_ICR_RXT0) {
-                
+                env_change_to_runnable_by_type(ENV_TYPE_IN_NS);
         }
 }

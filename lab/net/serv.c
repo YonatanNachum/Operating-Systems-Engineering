@@ -51,6 +51,8 @@ static bool buse[QUEUE_SIZE];
 static int next_i(int i) { return (i+1) % QUEUE_SIZE; }
 static int prev_i(int i) { return (i ? i-1 : QUEUE_SIZE-1); }
 
+bool recv_pkt_done;
+
 static void *
 get_buffer(void) {
 	void *va;
@@ -232,6 +234,7 @@ serve_thread(uint32_t a) {
 		break;
 	case NSREQ_INPUT:
 		jif_input(&nif, (void *)&req->pkt);
+		ipc_send(output_envid, NSREQ_COMPLETE, NULL, 0);
 		r = 0;
 		break;
 	default:
@@ -318,6 +321,8 @@ umain(int argc, char **argv)
 
 	binaryname = "ns";
 
+	recv_pkt_done = true;
+
 	// fork off the timer thread which will send us periodic messages
 	timer_envid = fork();
 	if (timer_envid < 0)
@@ -333,6 +338,9 @@ umain(int argc, char **argv)
 	if (input_envid < 0)
 		panic("error forking");
 	else if (input_envid == 0) {
+		if (sys_env_set_type(ENV_TYPE_IN_NS) != 0) {
+			panic("network server: Failed to set input env type\n");
+		}
 		input(ns_envid);
 		return;
 	}
@@ -343,6 +351,9 @@ umain(int argc, char **argv)
 	if (output_envid < 0)
 		panic("error forking");
 	else if (output_envid == 0) {
+		if (sys_env_set_type(ENV_TYPE_OUT_NS) != 0) {
+			panic("network server: Failed to set output env type\n");
+		}
 		output(ns_envid);
 		return;
 	}

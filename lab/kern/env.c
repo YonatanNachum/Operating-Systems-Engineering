@@ -558,3 +558,17 @@ env_run(struct Env *e)
 	env_pop_tf(&curenv->env_tf);
 }
 
+void 
+env_change_to_runnable_by_type(enum EnvType type)
+{
+        int i;
+	if (type != ENV_TYPE_OUT_NS || type != ENV_TYPE_IN_NS) {
+		return;
+	}
+        for (i = 0; i < NENV; i++) {
+	        if (envs[i].env_type == type){
+		        envs[i].env_status = ENV_RUNNABLE;
+	        }
+        }
+}
+

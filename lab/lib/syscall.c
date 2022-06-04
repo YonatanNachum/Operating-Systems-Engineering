@@ -134,3 +134,15 @@ sys_try_transmit(void *data, uint16_t len)
 {
 	return syscall(SYS_try_transmit, 0, (uint32_t)data, len, 0, 0, 0);
 }
+
+int 
+sys_receive(void *addr)
+{
+	return syscall(SYS_receive, 0, (uint32_t)addr, 0, 0, 0, 0);
+}
+
+int 
+sys_env_set_type(enum EnvType type)
+{
+	return syscall(SYS_env_set_type, 0, (uint32_t)type, 0, 0, 0, 0);
+}

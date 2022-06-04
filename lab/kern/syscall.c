@@ -434,6 +434,31 @@ sys_try_transmit(void *data, uint32_t len)
 	return e1000_transmit(data, (uint16_t)len);
 }
 
+static int
+sys_receive(void *addr)
+{
+	user_mem_assert(curenv, addr, TX_PACKET_SIZE, PTE_W);
+	return e1000_receive(addr);
+}
+
+static int
+sys_env_set_type(enum EnvType type)
+{
+	int i;
+
+	if (type != ENV_TYPE_OUT_NS || type != ENV_TYPE_IN_NS) {
+		return -E_INVAL;
+	}
+
+	for (i = 0; i < NENV; i++) {
+		if (envs[i].env_type == type){
+			return -E_BAD_ENV;
+		}
+	}
+	curenv->env_type = type;
+	return 0;
+}
+
 // Dispatches to the correct kernel function, passing the arguments.
 int32_t
 syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
@@ -495,6 +520,12 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 
 	case SYS_try_transmit:
 		return sys_try_transmit((void *)a1, a2);
+
+	case SYS_receive:
+		return sys_receive((void *)a1);
+
+	case SYS_env_set_type:
+		return sys_env_set_type(a1);
 
 	default:
 		return -E_INVAL;
