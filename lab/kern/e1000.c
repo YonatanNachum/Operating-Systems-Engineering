@@ -174,16 +174,18 @@ e1000_receive(void *data)
 {
         uint32_t tail_index;
         static uint32_t head_index = 0;
+        int pkt_length;
 
         tail_index = e1000_bar0[INDEX2OFFSET(E1000_RDT)];
         if ((rx_desc_pool[head_index].status & E1000_RXD_STAT_DD) == 0) {
                 return -E_RX_POOL_EMPTY;
         }
         memmove(data, rx_buf_array[head_index], rx_desc_pool[head_index].length);
+        pkt_length = rx_desc_pool[head_index].length;
         rx_desc_pool[head_index].status &= (~(E1000_RXD_STAT_DD | E1000_RXD_STAT_EOP));
         e1000_bar0[INDEX2OFFSET(E1000_RDT)] = (tail_index + 1) % RX_DESC_POOL_SIZE;
         head_index = (head_index + 1) % RX_DESC_POOL_SIZE;
-        return rx_desc_pool[head_index].length;
+        return pkt_length;
 }
 
 void

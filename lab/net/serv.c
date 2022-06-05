@@ -234,7 +234,7 @@ serve_thread(uint32_t a) {
 		break;
 	case NSREQ_INPUT:
 		jif_input(&nif, (void *)&req->pkt);
-		ipc_send(output_envid, NSREQ_COMPLETE, NULL, 0);
+		//ipc_send(output_envid, NSREQ_COMPLETE, NULL, 0);
 		r = 0;
 		break;
 	default:

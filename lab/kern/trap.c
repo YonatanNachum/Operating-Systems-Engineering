@@ -293,9 +293,9 @@ trap_dispatch(struct Trapframe *tf)
 		break;
 
 	case IRQ_OFFSET + IRQ_E1000:
-		lapic_eoi();
-		irq_eoi();
 		e1000_intr();
+		irq_eoi();
+		lapic_eoi();
 		break;
 
 	default:

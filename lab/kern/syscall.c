@@ -437,7 +437,7 @@ sys_try_transmit(void *data, uint32_t len)
 static int
 sys_receive(void *addr)
 {
-	user_mem_assert(curenv, addr, TX_PACKET_SIZE, PTE_W);
+	//user_mem_assert(curenv, addr, TX_PACKET_SIZE, PTE_W);
 	return e1000_receive(addr);
 }
 
@@ -446,7 +446,7 @@ sys_env_set_type(enum EnvType type)
 {
 	int i;
 
-	if (type != ENV_TYPE_OUT_NS || type != ENV_TYPE_IN_NS) {
+	if (type != ENV_TYPE_OUT_NS && type != ENV_TYPE_IN_NS) {
 		return -E_INVAL;
 	}
 

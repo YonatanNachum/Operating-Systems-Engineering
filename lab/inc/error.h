@@ -26,7 +26,7 @@ enum {
 	E_NOT_EXEC	,	// File not a valid executable
 	E_NOT_SUPP	,	// Operation not supported
 	E_TX_POOL_FULL	,	// TX desc pool is full
-	E_RX_POOL_FULL	,	// RX desc pool is full
+	E_RX_POOL_EMPTY	,	// RX desc pool is full
 
 	MAXERROR
 };
