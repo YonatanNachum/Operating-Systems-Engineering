@@ -11,6 +11,8 @@
 #define BUFFSIZE 512
 #define MAXPENDING 5	// Max connection requests
 
+#define ERROR_NOT_FOUND	404
+
 struct http_request {
 	int sock;
 	char *url;
@@ -77,7 +79,16 @@ static int
 send_data(struct http_request *req, int fd)
 {
 	// LAB 6: Your code here.
-	panic("send_data not implemented");
+	char buffer[BUFFSIZE];
+	int len;
+	if ((len = read(fd, buffer, BUFFSIZE)) < 0) {
+		return -1;
+	}
+	if(write(req->sock, buffer, len) != len){
+		die("Failed to send data to client");
+	}
+
+	return -1;
 }
 
 static int
@@ -223,7 +234,19 @@ send_file(struct http_request *req)
 	// set file_size to the size of the file
 
 	// LAB 6: Your code here.
-	panic("send_file not implemented");
+	struct Stat st;
+
+	if ((fd = open(req->url, O_RDONLY)) < 0) {
+		send_error(req, ERROR_NOT_FOUND);
+	}
+
+	if (fstat(fd, &st) < 0) {
+		send_error(req, ERROR_NOT_FOUND);
+	}
+	if (st.st_isdir) {
+		send_error(req, ERROR_NOT_FOUND);
+	}
+	file_size = st.st_size;
 
 	if ((r = send_header(req, 200)) < 0)
 		goto end;
