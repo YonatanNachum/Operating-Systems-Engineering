@@ -192,12 +192,17 @@ void
 e1000_intr()
 {
         uint32_t intr_status;
+        static envid_t out_ns, in_ns;
+
+	if (out_ns <= 0 || in_ns <= 0)
+		out_ns = env_find_by_type(ENV_TYPE_OUT_NS);
+                in_ns = env_find_by_type(ENV_TYPE_IN_NS);
 
         intr_status = e1000_bar0[INDEX2OFFSET(E1000_ICR)];
-        if (intr_status & E1000_ICR_TXDW) {
-                env_change_to_runnable_by_type(ENV_TYPE_OUT_NS);
+        if (out_ns > 0 && intr_status & E1000_ICR_TXDW) {
+                envs[out_ns].env_status = ENV_RUNNABLE;
         }
-        if (intr_status & E1000_ICR_RXT0) {
-                env_change_to_runnable_by_type(ENV_TYPE_IN_NS);
+        if (in_ns > 0 && intr_status & E1000_ICR_RXT0) {
+                envs[in_ns].env_status = ENV_RUNNABLE;
         }
 }

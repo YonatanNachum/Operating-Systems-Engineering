@@ -6,12 +6,13 @@ extern union Nsipc nsipcbuf;
 void
 sleep(int msec)
 {
-	unsigned now = sys_time_msec();
-	unsigned end = now + msec;
+	unsigned current = sys_time_msec();
+	unsigned end = current + msec;
 
-	if ((int)now < 0 && (int)now > -MAXERROR)
-		panic("sys_time_msec: %e", (int)now);
-	if (end < now)
+	// if ((int)current < 0 && (int)current > -MAXERROR) {
+	// 	panic("sys_time_msec: %e", (int)current);
+	// }
+	if (end < current)
 		panic("sleep: wrap");
 
 	while (sys_time_msec() < end)
@@ -37,6 +38,9 @@ input(envid_t ns_envid)
 
 	while (1) {
 		while ((nsipcbuf.pkt.jp_len = sys_receive(nsipcbuf.pkt.jp_data)) == -E_RX_POOL_EMPTY) {
+			if (sys_time_msec() > 300) {
+				sys_env_set_status(0, 4);
+			}
 			sys_yield();
 		}
 		ipc_send(ns_envid, NSREQ_INPUT, &nsipcbuf, PTE_P | PTE_U);
