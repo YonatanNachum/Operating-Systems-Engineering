@@ -14,13 +14,13 @@ output(envid_t ns_envid)
 	// 	- read a packet from the network server
 	//	- send the packet to the device driver
 	uint32_t req, whom;
-	int perm, r, tail_index = (1 << 30);
+	int perm, r, tail_index = TAIL_INDEX_DD_FLAG;
 	while (1) {
-		if ((tail_index & (1 << 30)) == 0) {
+		if ((tail_index & TAIL_INDEX_DD_FLAG) == 0) {
 			sys_env_set_status(0, ENV_NOT_RUNNABLE);
 			sys_yield();
 		}
-		tail_index &= ~(1 << 30);
+		tail_index &= ~TAIL_INDEX_DD_FLAG;
 		req = ipc_recv((int32_t *) &whom, &nsipcbuf[tail_index], &perm);
 		if (whom != ns_envid) {
 			cprintf("output: enviroment %u sent a packet and ignored, only %u should send a packet",
