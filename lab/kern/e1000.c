@@ -10,7 +10,7 @@
 volatile uint32_t *e1000_bar0;
 
 struct e1000_tx_desc tx_desc_pool[TX_DESC_POOL_SIZE];
-char tx_buf_array[TX_DESC_POOL_SIZE][TX_PACKET_SIZE];
+//char tx_buf_array[TX_DESC_POOL_SIZE][TX_PACKET_SIZE];
 
 struct e1000_tx_desc rx_desc_pool[RX_DESC_POOL_SIZE];
 char rx_buf_array[RX_DESC_POOL_SIZE][RX_PACKET_SIZE];
@@ -50,7 +50,7 @@ e1000_tx_init()
         e1000_bar0[INDEX2OFFSET(E1000_TIPG)] = 10 | (4 << 10) | (6 << 20);
 
         for (i = 0; i < TX_DESC_POOL_SIZE; ++i) {
-		tx_desc_pool[i].addr = PADDR(tx_buf_array[i]);
+		//tx_desc_pool[i].addr = PADDR(tx_buf_array[i]);
 		tx_desc_pool[i].cmd |= E1000_TXD_CMD_RS | E1000_TXD_CMD_EOP;
 		tx_desc_pool[i].status |= E1000_TXD_STAT_DD;
 	}
@@ -198,7 +198,8 @@ int
 e1000_transmit(void *data, uint16_t len)
 {
         uint32_t tail_index;
-        
+	pte_t *pte;
+
         tail_index = e1000_bar0[INDEX2OFFSET(E1000_TDT)];
         if ((tx_desc_pool[tail_index].status & E1000_TXD_STAT_DD) == 0) {
                 return -E_TX_POOL_FULL;
@@ -206,11 +207,14 @@ e1000_transmit(void *data, uint16_t len)
         if (len > TX_PACKET_SIZE) {
                 return -E_INVAL;
         }
-        memmove(tx_buf_array[tail_index], data, len);
+        //memmove(tx_buf_array[tail_index], data, len);
+        pte = pgdir_walk(curenv->env_pgdir, data, 0);
+        tx_desc_pool[tail_index].addr = PTE_ADDR(*pte) + PGOFF(data);
         tx_desc_pool[tail_index].length = len;
         tx_desc_pool[tail_index].status &= (~E1000_TXD_STAT_DD);
-        e1000_bar0[INDEX2OFFSET(E1000_TDT)] = (tail_index + 1) % TX_DESC_POOL_SIZE;
-        return 0;
+        tail_index = (tail_index + 1) % TX_DESC_POOL_SIZE;
+        e1000_bar0[INDEX2OFFSET(E1000_TDT)] = tail_index;
+        return tail_index | ((uint32_t)(tx_desc_pool[tail_index].status & E1000_TXD_STAT_DD) << 30);
 }
 
 int

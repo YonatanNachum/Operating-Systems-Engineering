@@ -129,6 +129,14 @@ sys_change_priority(uint8_t p)
 	return syscall(SYS_change_priority, 0, p, 0, 0, 0, 0);
 }
 
+/* Returns the next possibly free desc index with bit 30 
+ * indicating if the desc if free, if 0 the tx desc pool is full.
+ * return value bit map:
+ * [0-5] - desc index
+ * [6-29] - reserved
+ * [30] - desc free bit
+ * [31] - reserved
+ */
 int
 sys_try_transmit(void *data, uint16_t len)
 {

@@ -1,8 +1,9 @@
 #include "ns.h"
 
 #define debug 0
+#define TAIL_INDEX_DD_FLAG 
 
-extern union Nsipc nsipcbuf;
+extern union Nsipc nsipcbuf[64];
 
 void
 output(envid_t ns_envid)
@@ -13,9 +14,14 @@ output(envid_t ns_envid)
 	// 	- read a packet from the network server
 	//	- send the packet to the device driver
 	uint32_t req, whom;
-	int perm, r;
+	int perm, r, tail_index = (1 << 30);
 	while (1) {
-		req = ipc_recv((int32_t *) &whom, &nsipcbuf, &perm);
+		if ((tail_index & (1 << 30)) == 0) {
+			sys_env_set_status(0, ENV_NOT_RUNNABLE);
+			sys_yield();
+		}
+		tail_index &= ~(1 << 30);
+		req = ipc_recv((int32_t *) &whom, &nsipcbuf[tail_index], &perm);
 		if (whom != ns_envid) {
 			cprintf("output: enviroment %u sent a packet and ignored, only %u should send a packet",
 				whom, ns_envid);
@@ -26,9 +32,9 @@ output(envid_t ns_envid)
 				req, NSREQ_OUTPUT);
 			continue;
 		}
-		while ((r = sys_try_transmit(nsipcbuf.pkt.jp_data, nsipcbuf.pkt.jp_len)) != 0) {
+		while ((r = sys_try_transmit(nsipcbuf[tail_index].pkt.jp_data, nsipcbuf[tail_index].pkt.jp_len)) < 0) {
 			if (r == -E_INVAL) {
-				cprintf("output: packet size too big[%u]", nsipcbuf.pkt.jp_len);
+				cprintf("output: packet size too big[%u]", nsipcbuf[tail_index].pkt.jp_len);
 				break;
 			}
 			if (sys_time_msec() > SLEEP_MIN_MS) {
@@ -36,5 +42,6 @@ output(envid_t ns_envid)
 			}
 			sys_yield();
 		}
+		tail_index = r;
 	}
 }
