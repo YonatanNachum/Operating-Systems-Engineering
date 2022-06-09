@@ -1,7 +1,7 @@
 #include "ns.h"
 
 #define debug 0
-#define TAIL_INDEX_DD_FLAG 
+#define TAIL_INDEX_DD_FLAG	1 <<30
 
 extern union Nsipc nsipcbuf[64];
 
