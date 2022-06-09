@@ -31,8 +31,8 @@ output(envid_t ns_envid)
 				cprintf("output: packet size too big[%u]", nsipcbuf.pkt.jp_len);
 				break;
 			}
-			if (sys_time_msec() > 300) {
-				sys_env_set_status(0, 4);
+			if (sys_time_msec() > SLEEP_MIN_MS) {
+				sys_env_set_status(0, ENV_NOT_RUNNABLE);
 			}
 			sys_yield();
 		}

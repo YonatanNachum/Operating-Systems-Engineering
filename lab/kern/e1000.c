@@ -101,21 +101,10 @@ e1000_eeprom_read(uint8_t addr)
         return word;
 }
 
-uint16_t
-e1000_get_eeprom(uint16_t eeprom_addr) {
-    uint32_t eerd_reg = (uint16_t) ((eeprom_addr << E1000_EEPROM_RW_ADDR_SHIFT) | E1000_EEPROM_RW_REG_START);
-    e1000_bar0[E1000_EERD >> 2] = eerd_reg;
-    while ( !(e1000_bar0[E1000_EERD >> 2] & E1000_EEPROM_RW_REG_DONE) );
-    uint16_t data = (uint16_t) ((e1000_bar0[E1000_EERD >> 2] >> E1000_EEPROM_RW_ADDR_SHIFT) & 0x0000FFFF);
-    e1000_bar0[E1000_EERD >> 4] = 0;
-    return data;
-}
-
 static void
 e1000_eeprom_read_mac()
 {
         uint16_t word1, word2, word3;
-        uint32_t timeout = 10000;
 
         if ((e1000_bar0[INDEX2OFFSET(E1000_EECD)] & E1000_EECD_PRES) == 0) {
                 panic("rx_init: EEPROM is not present\n");

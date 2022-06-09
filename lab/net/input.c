@@ -38,8 +38,8 @@ input(envid_t ns_envid)
 
 	while (1) {
 		while ((nsipcbuf.pkt.jp_len = sys_receive(nsipcbuf.pkt.jp_data)) == -E_RX_POOL_EMPTY) {
-			if (sys_time_msec() > 300) {
-				sys_env_set_status(0, 4);
+			if (sys_time_msec() > SLEEP_MIN_MS) {
+				sys_env_set_status(0, ENV_NOT_RUNNABLE);
 			}
 			sys_yield();
 		}
