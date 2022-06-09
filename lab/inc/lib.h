@@ -64,6 +64,7 @@ int	sys_change_priority(uint8_t p);
 int	sys_try_transmit(void *data, uint16_t len);
 int 	sys_receive(void *addr);
 int	sys_env_set_type(enum EnvType type);
+int 	sys_get_mac_addr(uint8_t *addr);
 
 // This must be inlined.  Exercise for reader: why?
 static __inline envid_t __attribute__((always_inline))

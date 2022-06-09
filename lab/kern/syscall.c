@@ -459,6 +459,17 @@ sys_env_set_type(enum EnvType type)
 	return 0;
 }
 
+static void
+sys_get_mac_addr(uint8_t *addr)
+{
+	int i;
+
+	user_mem_assert(curenv, addr, 6, PTE_W);
+	for (i = 0; i < 6; ++i) {
+		addr[i] = e1000_mac[i];
+	}
+}
+
 // Dispatches to the correct kernel function, passing the arguments.
 int32_t
 syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
@@ -526,6 +537,10 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 
 	case SYS_env_set_type:
 		return sys_env_set_type(a1);
+
+	case SYS_get_mac_addr:
+		sys_get_mac_addr((uint8_t *)a1);
+		break;
 
 	default:
 		return -E_INVAL;

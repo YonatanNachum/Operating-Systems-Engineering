@@ -81,6 +81,60 @@ e1000_config_mac()
         e1000_bar0[INDEX2OFFSET(E1000_RAH)] = high | E1000_RAH_AV;
 }
 
+static inline uint16_t
+e1000_eeprom_read(uint8_t addr)
+{
+        uint16_t word;
+
+        /* Software can use the EEPROM Read register (EERD) to cause the Ethernet controller to read a
+         * word from the EEPROM that the software can then use. To do this, software writes the address to
+         * read the Read Address (EERD.ADDR) field and then simultaneously writes a 1b to the Start Read
+         * bit (EERD.START). The Ethernet controller then reads the word from the EEPROM, sets the Read
+         * Done bit (EERD.DONE), and puts the data in the Read Data field (EERD.DATA). Software can
+         * poll the EEPROM Read register until it sees the EERD.DONE bit set, then use the data from the
+         * EERD.DATA field. Any words read this way are not written to hardware’s internal registers.
+         */
+        e1000_bar0[INDEX2OFFSET(E1000_EERD)] = E1000_EEPROM_RW_REG_START | (addr << E1000_EEPROM_RW_ADDR_SHIFT);
+        while ((e1000_bar0[INDEX2OFFSET(E1000_EERD)] & E1000_EEPROM_RW_REG_DONE) == 0);
+        word = e1000_bar0[INDEX2OFFSET(E1000_EERD)] >> E1000_EEPROM_RW_REG_DATA;
+        e1000_bar0[INDEX2OFFSET(E1000_EERD)] &= ~(E1000_EEPROM_RW_REG_START);
+        return word;
+}
+
+uint16_t
+e1000_get_eeprom(uint16_t eeprom_addr) {
+    uint32_t eerd_reg = (uint16_t) ((eeprom_addr << E1000_EEPROM_RW_ADDR_SHIFT) | E1000_EEPROM_RW_REG_START);
+    e1000_bar0[E1000_EERD >> 2] = eerd_reg;
+    while ( !(e1000_bar0[E1000_EERD >> 2] & E1000_EEPROM_RW_REG_DONE) );
+    uint16_t data = (uint16_t) ((e1000_bar0[E1000_EERD >> 2] >> E1000_EEPROM_RW_ADDR_SHIFT) & 0x0000FFFF);
+    e1000_bar0[E1000_EERD >> 4] = 0;
+    return data;
+}
+
+static void
+e1000_eeprom_read_mac()
+{
+        uint16_t word1, word2, word3;
+        uint32_t timeout = 10000;
+
+        if ((e1000_bar0[INDEX2OFFSET(E1000_EECD)] & E1000_EECD_PRES) == 0) {
+                panic("rx_init: EEPROM is not present\n");
+        }
+
+        word1 = e1000_eeprom_read(0x0);
+        word2 = e1000_eeprom_read(0x1);
+        word3 = e1000_eeprom_read(0x2);
+
+        e1000_mac[0] = word1 & 0xff;
+        e1000_mac[1] = word1 >> 8;
+        e1000_mac[2] = word2 & 0xff;
+        e1000_mac[3] = word2 >> 8;
+        e1000_mac[4] = word3 & 0xff;
+        e1000_mac[5] = word3 >> 8;
+        cprintf("MAC: %x %x %x %x %x %x\n", e1000_mac[0], e1000_mac[1], e1000_mac[2],
+                e1000_mac[3], e1000_mac[4], e1000_mac[5]);
+}
+
 static void
 e1000_rx_init()
 {
@@ -88,6 +142,7 @@ e1000_rx_init()
 
         memset(rx_desc_pool, 0, sizeof(rx_desc_pool));
 
+        e1000_eeprom_read_mac();
         e1000_config_mac();
 
         // Initialize the MTA

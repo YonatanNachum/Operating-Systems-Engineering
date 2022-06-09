@@ -8,6 +8,8 @@
 #include <inc/error.h>
 #include <kern/picirq.h>
 
+extern uint8_t e1000_mac[6];
+
 #define E1000_VENODR_ID 0x8086
 #define E1000_DEVICE_ID 0x100E
 
@@ -43,6 +45,8 @@
 #define E1000_RAH_AV   0x80000000       /* Receive descriptor valid */
 #define E1000_MTA      0x05200          /* Multicast Table Array - RW Array */
 #define E1000_ICR      0x000C0          /* Interrupt Cause Read - R/clr */
+#define E1000_EECD     0x00010          /* EEPROM/Flash Control - RW */
+#define E1000_EERD     0x00014          /* EEPROM Read - RW */
 
 /* Receive Control */
 #define E1000_RCTL_EN             0x00000002    /* enable */
@@ -80,6 +84,15 @@
 /* Receive Descriptor bit definitions */
 #define E1000_RXD_STAT_DD       0x01    /* Descriptor Done */
 #define E1000_RXD_STAT_EOP      0x02    /* End of Packet */
+
+/* EEPROM/Read Control */
+#define E1000_EEPROM_RW_REG_DATA   16     /* Offset to data in EEPROM read/write registers */
+#define E1000_EEPROM_RW_REG_DONE   0x10   /* Offset to READ/WRITE done bit */
+#define E1000_EEPROM_RW_REG_START  0x1    /* First bit for telling part to start operation */
+#define E1000_EEPROM_RW_ADDR_SHIFT 8      /* Shift to the address bits */
+
+/* EEPROM/Flash Control */
+#define E1000_EECD_PRES      0x00000100 /* EEPROM Present */
 
 struct e1000_tx_desc
 {

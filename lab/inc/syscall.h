@@ -22,6 +22,7 @@ enum {
 	SYS_try_transmit,
 	SYS_receive,
 	SYS_env_set_type,
+	SYS_get_mac_addr,
 	NSYSCALLS
 };
 

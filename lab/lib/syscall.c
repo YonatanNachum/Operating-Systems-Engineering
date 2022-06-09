@@ -146,3 +146,9 @@ sys_env_set_type(enum EnvType type)
 {
 	return syscall(SYS_env_set_type, 0, (uint32_t)type, 0, 0, 0, 0);
 }
+
+int 
+sys_get_mac_addr(uint8_t *addr)
+{
+	return syscall(SYS_get_mac_addr, 0, (uint32_t)addr, 0, 0, 0, 0);
+}
