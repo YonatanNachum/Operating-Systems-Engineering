@@ -21,6 +21,8 @@ announce(void)
 	uint32_t gwip = inet_addr(DEFAULT);
 	int r;
 
+	sys_get_mac_addr(mac);
+
 	if ((r = sys_page_alloc(0, pkt, PTE_P|PTE_U|PTE_W)) < 0)
 		panic("sys_page_map: %e", r);
 
