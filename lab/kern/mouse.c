@@ -31,8 +31,7 @@ static struct {
 static int lastclicktick;
 static int recovery;
 
-uint8_t mouse_pointer[MOUSE_HEIGHT][MOUSE_WIDTH] =
-    {
+uint8_t mouse_pointer[MOUSE_HEIGHT][MOUSE_WIDTH] = {
         {2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {2, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {2, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -51,7 +50,9 @@ uint8_t mouse_pointer[MOUSE_HEIGHT][MOUSE_WIDTH] =
         {2, 2, 0, 0, 0, 0, 2, 1, 1, 2, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 2, 1, 1, 2, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0}
-    };
+};
+
+uint8_t color_backup[MOUSE_HEIGHT][MOUSE_WIDTH] = {{0}};
 
 uint8_t mouse_color[2];
 
@@ -175,8 +176,9 @@ drawMouse(int x, int y, bool clean) {
             		if (temp) {
                 		addr = SCREEN_BASE_ADDR + (y + i) * SCREEN_WIDTH + x + j;
 				if (clean) {
-					*addr = VGA_BLACK;
+					*addr = color_backup[i][j];
 				} else {
+					color_backup[i][j] = *addr;
 					*addr = mouse_color[temp - 1];
 				}	
             		}
