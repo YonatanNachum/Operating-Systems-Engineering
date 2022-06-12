@@ -33,7 +33,6 @@ KERN_SRCFILES :=	kern/entry.S \
 			lib/string.c \
 			kern/vga.c \
 			kern/mouse.c \
-			kern/time.c
 
 # Source files for LAB4
 KERN_SRCFILES +=	kern/mpentry.S \
