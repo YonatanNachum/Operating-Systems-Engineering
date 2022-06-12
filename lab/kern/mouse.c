@@ -12,13 +12,8 @@
 #define MOUSE_HEIGHT 	18
 #define MOUSE_WIDTH 	15
 
-typedef struct MousePos {
-    int x;
-    int y;
-} MousePos;
-
-MousePos curr_pos = {0, 0};
-MousePos prev_pos = {0, 0};
+struct GridPos curr_pos = {0, 0};
+struct GridPos prev_pos = {0, 0};
 
 static struct {
 	uint8_t x_sgn, y_sgn;
@@ -30,6 +25,7 @@ static struct {
 
 static int lastclicktick;
 static int recovery;
+static bool color_pick_on;
 
 uint8_t mouse_pointer[MOUSE_HEIGHT][MOUSE_WIDTH] = {
         {2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -219,16 +215,17 @@ mouse_command()
   	}
 	if (btns) {
 		if (packet.l_btn) {
-			if (packet.tick - lastclicktick < 5) {
-				cprintf("hold\n");
-			} else if (packet.tick - lastclicktick < 200) {
+			if (packet.tick - lastclicktick < 200) {
 				cprintf("double\n");
 			} else {
 				cprintf("single\n");
+				//if (curr_pos.x >= color_loc.x)
 			}
+			remove_color_pick();
 		}
 		if (packet.r_btn) { 
 			cprintf("Right Click\n");
+			draw_color_pick(curr_pos.x + MOUSE_WIDTH, curr_pos.y);
 		}
 		if (packet.m_btn) {
 			cprintf("Middle\n");

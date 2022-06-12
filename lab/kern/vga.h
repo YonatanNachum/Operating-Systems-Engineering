@@ -12,6 +12,11 @@
 #define SCREEN_HEIGHT           200
 #define NUM_COLORS              256
 
+/* Macros for color pick */
+#define PICK_COLOR_SIZE	20
+#define PICK_NUM_COLORS	3
+#define PICK_WIDTH	(PICK_COLOR_SIZE*PICK_NUM_COLORS)
+
 // Colors
 enum vga_color {
         VGA_BLACK = 0,
@@ -32,8 +37,22 @@ enum vga_color {
         VGA_WHITE,
 };
 
+struct GridPos
+{
+        int x;
+        int y;
+};
+
+extern struct GridPos color_loc;
+ 
 void vga_init(void);
-void draw_circle(uint16_t x, uint16_t y, uint16_t radius, uint8_t color);
 void write_pixel(uint32_t x, uint32_t y, uint8_t color);
+
+void remove_color_pick();
+void draw_color_pick(int x, int y);
+void draw_circle(uint16_t x, uint16_t y, uint16_t radius, uint8_t color);
+void draw_line(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t color);
+void draw_rectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t color);
+void draw_diamond(uint16_t x, uint16_t y, uint16_t radius, uint8_t color);
 
 #endif /* _VGA_H_ */

@@ -39,6 +39,8 @@
 #define ATTR_DATA_READ_REG		0x3C1
 #define ATTR_RESET_REG			0x3DA
 
+struct GridPos color_loc = {0, 0};
+uint8_t color_pick_backup[PICK_COLOR_SIZE][PICK_WIDTH] = {{0}};
 
 static void clear_screen(void);
 
@@ -215,7 +217,7 @@ vga_init(void)
 }
 
 static void 
-draw_bresenham_circle(int xc, int yc, int x, int y, uint8_t color) 
+draw_dots(int xc, int yc, int x, int y, uint8_t color) 
 { 
 	write_pixel(xc+x, yc+y, color); 
 	write_pixel(xc-x, yc+y, color); 
@@ -231,9 +233,12 @@ void
 draw_circle(uint16_t x, uint16_t y, uint16_t radius, uint8_t color)
 {
 	int x2 = 0, y2 = radius;
+	/* d is a pool of iterations for drawing dots with changing x2 but without changing y2, when d
+	 * is positive it means we draw enough dots with the same y2 w.r.t to the radius.
+	 */
 	int d = 3 - 2 * radius;
-	draw_bresenham_circle(x, y, x2, y2, color);
-	while (y2 >= x2) {
+	draw_dots(x, y, x2, y2, color);
+	while (y2 >= x2) {	
 		x2++;
 		if (d > 0) {
 			y2--;
@@ -241,6 +246,92 @@ draw_circle(uint16_t x, uint16_t y, uint16_t radius, uint8_t color)
 		} else {
 			d = d + 4 * x2 + 6;
 		} 
-		draw_bresenham_circle(x, y, x2, y2, color);
+		draw_dots(x, y, x2, y2, color);
   	} 
+}
+
+void draw_line(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t color)
+{
+	uint16_t i;
+
+	if (y1 == y2) {
+    		for(i = x1; i <= x2; i++) {
+      			write_pixel(i, y1, color);
+		}
+    		return;
+  	}
+
+  	if (x1 == x2) {
+    		for (i = y1; i <= y2; i++) {
+      			write_pixel(x1, i, color);
+    		}
+    		return;
+  	}
+}
+
+void draw_rectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t color)
+{
+  	draw_line(x, y, x, y + height, color);
+  	draw_line(x, y, x + width, y, color);
+  	draw_line(x + width, y, x + width, y + height, color);
+  	draw_line(x, y + height, x + width, y + height, color);
+}
+
+void draw_diamond(uint16_t x, uint16_t y, uint16_t radius, uint8_t color)
+{
+	uint16_t x2 = 0, y2 = radius;
+  	uint16_t d = 3 - 2 * radius;
+  	draw_dots(x, y, x2, y2, color);
+  	while (y2 >= x2) {
+    		x2++;
+      		y2--;
+      		d = d + 4 * (x2 - y2) + 10;
+    		draw_dots(x, y, x2, y2, color);
+  	} 
+}
+
+static uint8_t
+write_pixel_ret(uint32_t x, uint32_t y, uint8_t color)
+{
+	uint8_t *off;
+	uint8_t old_color = 0;
+
+	off = SCREEN_BASE_ADDR + SCREEN_WIDTH * y + x;
+	if (off < SCREEN_MAX_ADDR) {
+		old_color = *off;
+		*off = color;
+	}
+	return old_color;
+}
+
+void draw_color_pick(int x, int y)
+{
+	uint8_t c, i, j, old_color=0;
+	color_loc.x = x;
+	color_loc.y = y;
+	uint8_t colors[PICK_NUM_COLORS] = {VGA_WHITE, VGA_RED, VGA_BLUE};
+	for (c = 0; c < PICK_NUM_COLORS; ++c) {
+		for (i = 0; i < PICK_COLOR_SIZE; ++i) {
+			for (j = 0; j < PICK_COLOR_SIZE; ++j) {
+				old_color = write_pixel_ret(x + i + c * PICK_COLOR_SIZE, y + j, colors[c]);
+				color_pick_backup[j][i + c * PICK_COLOR_SIZE] = old_color;
+			}
+		}
+	}
+}
+
+void remove_color_pick()
+{
+	uint8_t c, i, j;
+
+	for (c = 0; c < PICK_NUM_COLORS; ++c) {
+		for (i = 0; i < PICK_COLOR_SIZE; ++i) {
+			for (j = 0; j < PICK_COLOR_SIZE; ++j) {
+				write_pixel(color_loc.x + i + c * PICK_COLOR_SIZE, color_loc.y + j,
+					    color_pick_backup[j][i + c * PICK_COLOR_SIZE]);
+			}
+		}
+	}
+	color_loc.x = 0;
+	color_loc.y = 0;
 }
