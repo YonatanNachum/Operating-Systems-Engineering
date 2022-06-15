@@ -82,9 +82,6 @@ i386_init(void)
 
 	// Should not be necessary - drains keyboard because interrupt has given up.
 	kbd_intr();
-	draw_circle(50, 50, 10, VGA_RED);
-	draw_rectangle(100, 100, 40, 40, VGA_BLUE);
-	draw_diamond(200, 100, 30, VGA_BLUE);
 	// Schedule and run the first user environment!
 	sched_yield();
 }

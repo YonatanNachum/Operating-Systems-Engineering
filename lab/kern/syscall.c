@@ -13,6 +13,7 @@
 #include <kern/sched.h>
 #include <kern/time.h>
 #include <kern/e1000.h>
+#include <kern/vga.h>
 
 // Print a string to the system console.
 // The string is exactly 'len' characters long.
@@ -470,6 +471,36 @@ sys_get_mac_addr(uint8_t *addr)
 	}
 }
 
+static int
+sys_draw(struct draw_type *shape)
+{
+	user_mem_assert(curenv, shape, sizeof(struct draw_type), PTE_W);
+	switch (shape->shape)
+	{
+	case shape_circle:
+		draw_circle(shape->u.circle.x, shape->u.circle.y, shape->u.circle.radius, shape->color);
+		break;
+	
+	case shape_diamond:
+		draw_diamond(shape->u.circle.x, shape->u.circle.y, shape->u.circle.radius, shape->color);
+		break;
+	
+	case shape_line:
+		draw_line(shape->u.line.x1, shape->u.line.y1, shape->u.line.x2, shape->u.line.y2,
+			  shape->color);
+		break;
+
+	case shape_rectangle:
+		draw_rectangle(shape->u.rectangle.x, shape->u.rectangle.y, shape->u.rectangle.height,
+			       shape->u.rectangle.width, shape->color);
+		break;
+
+	default:
+		return -E_INVAL;
+	}
+	return 0;
+}
+
 // Dispatches to the correct kernel function, passing the arguments.
 int32_t
 syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
@@ -541,6 +572,9 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 	case SYS_get_mac_addr:
 		sys_get_mac_addr((uint8_t *)a1);
 		break;
+
+	case SYS_draw:
+		return sys_draw((struct draw_type *)a1);
 
 	default:
 		return -E_INVAL;

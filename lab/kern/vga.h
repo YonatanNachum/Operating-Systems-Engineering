@@ -4,6 +4,8 @@
 # error "This is a JOS kernel header; user programs should not #include it"
 #endif
 
+#include <inc/vga.h>
+
 /* Reference: Intel OpenSource HD Graphics PRM */
 
 #define SCREEN_BASE_ADDR        (uint8_t *)0xf00A0000
@@ -16,26 +18,6 @@
 #define PICK_COLOR_SIZE	20
 #define PICK_NUM_COLORS	3
 #define PICK_WIDTH	(PICK_COLOR_SIZE*PICK_NUM_COLORS)
-
-// Colors
-enum vga_color {
-        VGA_BLACK = 0,
-        VGA_BLUE,
-        VGA_GREEN,
-        VGA_CYAN,
-        VGA_RED,
-        VGA_MAGENTA,
-        VGA_BROWN,
-        VGA_GREY,
-        VGA_DARK_GREY,
-        VGA_BRIGHT_BLUE,
-        VGA_BRIGHT_GREEN,
-        VGA_BRIGHT_CYAN,
-        VGA_BRIGHT_RED,
-        VGA_BRIGHT_MAGENTA,
-        VGA_YELLOW,
-        VGA_WHITE,
-};
 
 struct GridPos
 {

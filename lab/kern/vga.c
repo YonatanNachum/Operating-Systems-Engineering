@@ -226,7 +226,7 @@ draw_dots(int xc, int yc, int x, int y, uint8_t color)
 	write_pixel(xc+y, yc+x, color); 
 	write_pixel(xc-y, yc+x, color); 
 	write_pixel(xc+y, yc-x, color); 
-	write_pixel(xc-y, yc-x, color); 
+	write_pixel(xc-y, yc-x, color);
 } 
 
 void 
