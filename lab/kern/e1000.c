@@ -13,7 +13,8 @@ struct e1000_tx_desc tx_desc_pool[TX_DESC_POOL_SIZE];
 //char tx_buf_array[TX_DESC_POOL_SIZE][TX_PACKET_SIZE];
 
 struct e1000_tx_desc rx_desc_pool[RX_DESC_POOL_SIZE];
-char rx_buf_array[RX_DESC_POOL_SIZE][RX_PACKET_SIZE];
+//char rx_buf_array[RX_DESC_POOL_SIZE][RX_PACKET_SIZE];
+struct rx_buf *rx_buf_array = NULL;
 
 uint8_t e1000_mac[6] = {0x52, 0x54, 0x00, 0x12, 0x34, 0x56};
 // LAB 6: Your driver code here
@@ -163,7 +164,7 @@ e1000_rx_init()
         e1000_bar0[INDEX2OFFSET(E1000_RCTL)] = E1000_RCTL_EN | E1000_RCTL_SZ_2048 | E1000_RCTL_BAM | E1000_RCTL_SECRC;
 
         for (i = 0; i < RX_DESC_POOL_SIZE; ++i) {
-		rx_desc_pool[i].addr = PADDR(rx_buf_array[i]);
+		rx_desc_pool[i].addr = PADDR(rx_buf_array[i].buf);
 	}
 }
 
@@ -228,7 +229,7 @@ e1000_receive(void *data)
         if ((rx_desc_pool[head_index].status & E1000_RXD_STAT_DD) == 0) {
                 return -E_RX_POOL_EMPTY;
         }
-        memmove(data, rx_buf_array[head_index], rx_desc_pool[head_index].length);
+        memmove(data, rx_buf_array[head_index].buf, rx_desc_pool[head_index].length);
         pkt_length = rx_desc_pool[head_index].length;
         rx_desc_pool[head_index].status &= (~(E1000_RXD_STAT_DD | E1000_RXD_STAT_EOP));
         e1000_bar0[INDEX2OFFSET(E1000_RDT)] = (tail_index + 1) % RX_DESC_POOL_SIZE;

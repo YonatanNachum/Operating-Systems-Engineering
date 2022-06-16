@@ -261,6 +261,8 @@ sys_page_map(envid_t srcenvid, void *srcva,
 	}
 	if ((uint32_t)srcva >= UTOP || PGOFF(srcva) || (uint32_t)dstva >= UTOP || PGOFF(dstva) ||
 	    (perm & PTE_U) == 0 || (perm & PTE_P) == 0 || (perm & (~PTE_SYSCALL)) !=0) {
+		cprintf("dsvtva: 0x%x !!\n", dstva);
+		cprintf("prem: 0x%x\n", perm);
 		return -E_INVAL;
 	}
 	page = page_lookup(src_env->env_pgdir, srcva, &pte);

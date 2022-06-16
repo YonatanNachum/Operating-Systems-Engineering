@@ -104,4 +104,9 @@ union Nsipc {
 	char _pad[PGSIZE];
 };
 
+struct rx_buf
+{
+        char buf[2048];
+}__attribute__((packed));
+
 #endif // !JOS_INC_NS_H

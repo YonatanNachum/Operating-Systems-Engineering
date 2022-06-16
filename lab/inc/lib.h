@@ -33,6 +33,7 @@ extern const char *binaryname;
 extern const volatile struct Env *thisenv;
 extern const volatile struct Env envs[NENV];
 extern const volatile struct PageInfo pages[];
+extern const volatile struct rx_buf rx_buf_array[128];
 
 // exit.c
 void	exit(void);
