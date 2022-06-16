@@ -33,6 +33,7 @@ KERN_SRCFILES :=	kern/entry.S \
 			lib/string.c \
 			kern/vga.c \
 			kern/mouse.c \
+			kern/bitmap.c \
 
 # Source files for LAB4
 KERN_SRCFILES +=	kern/mpentry.S \
@@ -109,7 +110,8 @@ KERN_BINFILES +=	user/testpteshare \
 			user/testpiperace2 \
 			user/primespipe \
 			user/testkbd \
-			user/testshell
+			user/testshell\
+			user/pong
 
 KERN_OBJFILES := $(patsubst %.c, $(OBJDIR)/%.o, $(KERN_SRCFILES))
 KERN_OBJFILES := $(patsubst %.S, $(OBJDIR)/%.o, $(KERN_OBJFILES))

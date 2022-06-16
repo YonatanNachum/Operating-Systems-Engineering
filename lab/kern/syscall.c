@@ -14,6 +14,7 @@
 #include <kern/time.h>
 #include <kern/e1000.h>
 #include <kern/vga.h>
+#include <kern/bitmap.h>
 
 // Print a string to the system console.
 // The string is exactly 'len' characters long.
@@ -478,27 +479,37 @@ sys_draw(struct draw_type *shape)
 	switch (shape->shape)
 	{
 	case shape_circle:
-		draw_circle(shape->u.circle.x, shape->u.circle.y, shape->u.circle.radius, shape->color);
+		draw_circle(shape->u.circle, shape->border_color);
 		break;
 	
 	case shape_diamond:
-		draw_diamond(shape->u.circle.x, shape->u.circle.y, shape->u.circle.radius, shape->color);
+		draw_diamond(shape->u.diamond, shape->border_color);
 		break;
 	
 	case shape_line:
 		draw_line(shape->u.line.x1, shape->u.line.y1, shape->u.line.x2, shape->u.line.y2,
-			  shape->color);
+			  shape->border_color);
 		break;
 
 	case shape_rectangle:
-		draw_rectangle(shape->u.rectangle.x, shape->u.rectangle.y, shape->u.rectangle.height,
-			       shape->u.rectangle.width, shape->color);
+		draw_rectangle(shape->u.rectangle, shape->border_color);
+		break;
+
+	case shape_string:
+		draw_string(shape->u.string.x, shape->u.string.y, shape->u.string.str,
+			    shape->border_color);
 		break;
 
 	default:
 		return -E_INVAL;
 	}
 	return 0;
+}
+
+static void
+sys_clear_screen(void)
+{
+	clear_screen();
 }
 
 // Dispatches to the correct kernel function, passing the arguments.
@@ -575,6 +586,10 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 
 	case SYS_draw:
 		return sys_draw((struct draw_type *)a1);
+
+	case SYS_clear_screen:
+		sys_clear_screen();
+		break;
 
 	default:
 		return -E_INVAL;

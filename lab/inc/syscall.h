@@ -24,6 +24,7 @@ enum {
 	SYS_env_set_type,
 	SYS_get_mac_addr,
 	SYS_draw,
+	SYS_clear_screen,
 	NSYSCALLS
 };
 

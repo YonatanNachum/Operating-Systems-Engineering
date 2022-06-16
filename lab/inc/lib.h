@@ -67,6 +67,7 @@ int 	sys_receive(void *addr);
 int	sys_env_set_type(enum EnvType type);
 int 	sys_get_mac_addr(uint8_t *addr);
 int	sys_draw(struct draw_type *shape);
+int	sys_clear_screen(void);
 
 // This must be inlined.  Exercise for reader: why?
 static __inline envid_t __attribute__((always_inline))
@@ -146,6 +147,18 @@ int	pipeisclosed(int pipefd);
 
 // wait.c
 void	wait(envid_t env);
+
+
+// draw.c
+int	draw_circle(uint16_t x, uint16_t y, uint16_t radius, enum vga_color border_color,
+                    enum vga_color fill_color);
+int	draw_line(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t color);
+int	draw_rectangle(uint16_t x, uint16_t y, uint16_t height, uint16_t width,
+		       enum vga_color border_color,enum vga_color fill_color);
+int 	draw_diamond(uint16_t x, uint16_t y, uint16_t radius, enum vga_color border_color,
+                     enum vga_color fill_color);
+int	draw_string(uint16_t x, uint16_t y, char *str, enum vga_color color);
+void	clear_screen(void);
 
 /* File open modes */
 #define	O_RDONLY	0x0000		/* open for reading only */

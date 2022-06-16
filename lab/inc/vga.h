@@ -21,29 +21,34 @@ enum vga_color {
         VGA_BRIGHT_MAGENTA,
         VGA_YELLOW,
         VGA_WHITE,
+
+	VGA_NO_COLOR
 };
 
 enum shape_type{
 	shape_circle = 0,
 	shape_line,
 	shape_rectangle,
-	shape_diamond
+	shape_diamond,
+	shape_string,
 };
 
 struct draw_type {
 	enum shape_type shape;
-	uint16_t color;
+	enum vga_color border_color;
 	union {
 		struct draw_circle {
 			uint16_t x;
 			uint16_t y;
 			uint16_t radius;
+			enum vga_color fill_color;
 		} circle;
 
 		struct draw_diamond {
 			uint16_t x;
 			uint16_t y;
 			uint16_t radius;
+			enum vga_color fill_color;
 		} diamond;
 
 		struct draw_line {
@@ -58,7 +63,14 @@ struct draw_type {
 			uint16_t y;
 			uint16_t width;
 			uint16_t height;
+			enum vga_color fill_color;
 		} rectangle;
+
+		struct draw_string {
+			uint16_t x;
+			uint16_t y;
+			char *str;
+		} string;
 	} u;
 };
 

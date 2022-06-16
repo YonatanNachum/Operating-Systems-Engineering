@@ -42,8 +42,6 @@
 struct GridPos color_loc = {0, 0};
 uint8_t color_pick_backup[PICK_COLOR_SIZE][PICK_WIDTH] = {{0}};
 
-static void clear_screen(void);
-
 void
 write_pixel(uint32_t x, uint32_t y, uint8_t color)
 {
@@ -54,13 +52,13 @@ write_pixel(uint32_t x, uint32_t y, uint8_t color)
 	}
 }
 
-static void
+void
 clear_screen (void)
 {
         uint16_t x, y;
         for(y = 0; y < SCREEN_HEIGHT; y++) {
 		for(x = 0; x < SCREEN_WIDTH; x++) {
-			write_pixel(x, y, 0);
+			write_pixel(x, y, VGA_BLACK);
                 }
         }
 }
@@ -218,26 +216,38 @@ vga_init(void)
 
 static void 
 draw_dots(int xc, int yc, int x, int y, uint8_t color) 
-{ 
+{
 	write_pixel(xc+x, yc+y, color); 
-	write_pixel(xc-x, yc+y, color); 
-	write_pixel(xc+x, yc-y, color); 
-	write_pixel(xc-x, yc-y, color); 
-	write_pixel(xc+y, yc+x, color); 
-	write_pixel(xc-y, yc+x, color); 
-	write_pixel(xc+y, yc-x, color); 
+	write_pixel(xc-x, yc+y, color);
+	write_pixel(xc+x, yc-y, color);
+	write_pixel(xc-x, yc-y, color);
+	write_pixel(xc+y, yc+x, color);
+	write_pixel(xc-y, yc+x, color);
+	write_pixel(xc+y, yc-x, color);
 	write_pixel(xc-y, yc-x, color);
 } 
 
-void 
-draw_circle(uint16_t x, uint16_t y, uint16_t radius, uint8_t color)
+static void
+fill_shape(int xc, int yc, int x, int y, uint8_t color)
 {
-	int x2 = 0, y2 = radius;
+	draw_line(xc-x+1, yc+y-1, xc+x-1, yc+y-1, color);
+	draw_line(xc-x+1, yc-y+1, xc+x-1, yc-y+1, color);
+	draw_line(xc-y+1, yc+x-1, xc+y-1, yc+x-1, color);
+	draw_line(xc-y+1, yc-x+1, xc+y-1, yc-x+1, color);
+}
+
+void 
+draw_circle(struct draw_circle circle, uint8_t border_color)
+{
+	int x2 = 0, y2 = circle.radius;
 	/* d is a pool of iterations for drawing dots with changing x2 but without changing y2, when d
 	 * is positive it means we draw enough dots with the same y2 w.r.t to the radius.
 	 */
-	int d = 3 - 2 * radius;
-	draw_dots(x, y, x2, y2, color);
+	int d = 3 - 2 * circle.radius;
+	draw_dots(circle.x, circle.y, x2, y2, border_color);
+	if (circle.fill_color != VGA_NO_COLOR) {
+		fill_shape(circle.x, circle.y, x2, y2, circle.fill_color);
+	}
 	while (y2 >= x2) {	
 		x2++;
 		if (d > 0) {
@@ -245,48 +255,72 @@ draw_circle(uint16_t x, uint16_t y, uint16_t radius, uint8_t color)
 			d = d + 4 * (x2 - y2) + 10;
 		} else {
 			d = d + 4 * x2 + 6;
-		} 
-		draw_dots(x, y, x2, y2, color);
+		}
+		draw_dots(circle.x, circle.y, x2, y2, border_color);
+		if (circle.fill_color != VGA_NO_COLOR) {
+			fill_shape(circle.x, circle.y, x2, y2, circle.fill_color);
+		}
   	} 
 }
 
-void draw_line(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t color)
+void
+draw_line(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t border_color)
 {
 	uint16_t i;
 
 	if (y1 == y2) {
     		for(i = x1; i <= x2; i++) {
-      			write_pixel(i, y1, color);
+      			write_pixel(i, y1, border_color);
 		}
     		return;
   	}
 
   	if (x1 == x2) {
     		for (i = y1; i <= y2; i++) {
-      			write_pixel(x1, i, color);
+      			write_pixel(x1, i, border_color);
     		}
     		return;
   	}
 }
 
-void draw_rectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t color)
+void
+draw_rectangle(struct draw_rectangle rectangle, uint8_t border_color)
 {
-  	draw_line(x, y, x, y + height, color);
-  	draw_line(x, y, x + width, y, color);
-  	draw_line(x + width, y, x + width, y + height, color);
-  	draw_line(x, y + height, x + width, y + height, color);
+	uint16_t x, y, width, height, i;
+
+	x = rectangle.x;
+	y = rectangle.y;
+	height = rectangle.height;
+	width = rectangle.width;
+
+  	draw_line(x, y, x, y + height, border_color);
+  	draw_line(x, y, x + width, y, border_color);
+  	draw_line(x + width, y, x + width, y + height, border_color);
+  	draw_line(x, y + height, x + width, y + height, border_color);
+	if (rectangle.fill_color != VGA_NO_COLOR) {
+    		for(i = y + 1; i < y + height; i++) {
+      			draw_line(x + 1, i, x + width - 1, i, rectangle.fill_color);
+		}		
+	}
 }
 
-void draw_diamond(uint16_t x, uint16_t y, uint16_t radius, uint8_t color)
+void
+draw_diamond(struct draw_diamond diamond, uint8_t border_color)
 {
-	uint16_t x2 = 0, y2 = radius;
-  	uint16_t d = 3 - 2 * radius;
-  	draw_dots(x, y, x2, y2, color);
+	uint16_t x2 = 0, y2 = diamond.radius;
+  	uint16_t d = 3 - 2 * diamond.radius;
+  	draw_dots(diamond.x, diamond.y, x2, y2, border_color);
+	if (diamond.fill_color != VGA_NO_COLOR) {
+		fill_shape(diamond.x, diamond.y, x2, y2, diamond.fill_color);
+	}
   	while (y2 >= x2) {
     		x2++;
       		y2--;
       		d = d + 4 * (x2 - y2) + 10;
-    		draw_dots(x, y, x2, y2, color);
+    		draw_dots(diamond.x, diamond.y, x2, y2, border_color);
+		if (diamond.fill_color != VGA_NO_COLOR) {
+			fill_shape(diamond.x, diamond.y, x2, y2, diamond.fill_color);
+		}
   	} 
 }
 

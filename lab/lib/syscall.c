@@ -169,3 +169,9 @@ sys_draw(struct draw_type *shape)
 {
 	return syscall(SYS_draw, 0, (uint32_t)shape, 0, 0, 0, 0);
 }
+
+int 
+sys_clear_screen(void)
+{
+	return syscall(SYS_clear_screen, 0, 0, 0, 0, 0, 0);
+}
