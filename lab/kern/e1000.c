@@ -233,7 +233,7 @@ e1000_receive(uint32_t *buf_idx)
         }
         *buf_idx = rec_head_index;
         // memmove(data, rx_buf_array[rec_head_index].buf, rx_desc_pool[rec_head_index].length);
-        // pkt_length = rx_desc_pool[rec_head_index].length;
+        pkt_length = rx_desc_pool[rec_head_index].length;
         // rx_desc_pool[rec_head_index].status &= (~(E1000_RXD_STAT_DD | E1000_RXD_STAT_EOP));
         // e1000_bar0[INDEX2OFFSET(E1000_RDT)] = (tail_index + 1) % RX_DESC_POOL_SIZE;
         // rec_head_index = (rec_head_index + 1) % RX_DESC_POOL_SIZE;

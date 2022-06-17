@@ -144,7 +144,7 @@ sys_try_transmit(void *data, uint16_t len)
 }
 
 int 
-sys_receive(uint8_t *buf_idx)
+sys_receive(uint32_t *buf_idx)
 {
 	return syscall(SYS_receive, 0, (uint32_t)buf_idx, 0, 0, 0, 0);
 }
@@ -156,7 +156,7 @@ sys_env_set_type(enum EnvType type)
 }
 
 int 
-sys_get_mac_addr(uint32_t *addr)
+sys_get_mac_addr(uint8_t *addr)
 {
 	return syscall(SYS_get_mac_addr, 0, (uint32_t)addr, 0, 0, 0, 0);
 }
