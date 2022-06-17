@@ -121,7 +121,8 @@ struct e1000_rx_desc
 
 int e1000_attach(struct pci_func *pcif);
 int e1000_transmit(void *data, uint16_t len);
-int e1000_receive(void *data);
+int e1000_receive(uint32_t *buf_idx);
 void e1000_intr();
+void e1000_free_rx_buf();
 
 #endif	// JOS_KERN_E1000_H

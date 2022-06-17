@@ -23,6 +23,7 @@ enum {
 	SYS_receive,
 	SYS_env_set_type,
 	SYS_get_mac_addr,
+	SYS_free_rx_buf,
 	NSYSCALLS
 };
 

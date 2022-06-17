@@ -121,7 +121,7 @@ low_level_output(struct netif *netif, struct pbuf *p)
 static struct pbuf *
 low_level_input(void *va)
 {
-    struct jif_pkt *pkt = (struct jif_pkt *)va;
+    struct jif_pkt_zero_copy *pkt = (struct jif_pkt_zero_copy *)va;
     s16_t len = pkt->jp_len;
 
     struct pbuf *p = pbuf_alloc(PBUF_RAW, len, PBUF_POOL);

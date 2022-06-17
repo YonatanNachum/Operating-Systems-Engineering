@@ -12,6 +12,11 @@ struct jif_pkt {
 	char jp_data[0];
 };
 
+struct jif_pkt_zero_copy {
+	int jp_len;
+	char *jp_data;
+};
+
 // Definitions for requests from clients to network server
 enum {
 	// The following messages pass a page containing an Nsipc.
@@ -99,6 +104,8 @@ union Nsipc {
 	} socket;
 
 	struct jif_pkt pkt;
+
+	struct jif_pkt_zero_copy pkt_zero;
 
 	// Ensure Nsipc is one page
 	char _pad[PGSIZE];

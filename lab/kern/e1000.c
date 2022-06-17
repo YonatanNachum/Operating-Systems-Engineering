@@ -17,6 +17,9 @@ struct e1000_tx_desc rx_desc_pool[RX_DESC_POOL_SIZE];
 struct rx_buf *rx_buf_array = NULL;
 
 uint8_t e1000_mac[6] = {0x52, 0x54, 0x00, 0x12, 0x34, 0x56};
+
+uint32_t rec_head_index = 0;
+
 // LAB 6: Your driver code here
 
 static void
@@ -219,21 +222,21 @@ e1000_transmit(void *data, uint16_t len)
 }
 
 int
-e1000_receive(void *data)
+e1000_receive(uint32_t *buf_idx)
 {
-        uint32_t tail_index;
-        static uint32_t head_index = 0;
+        //uint32_t tail_index;
         int pkt_length;
 
-        tail_index = e1000_bar0[INDEX2OFFSET(E1000_RDT)];
-        if ((rx_desc_pool[head_index].status & E1000_RXD_STAT_DD) == 0) {
+        //tail_index = e1000_bar0[INDEX2OFFSET(E1000_RDT)];
+        if ((rx_desc_pool[rec_head_index].status & E1000_RXD_STAT_DD) == 0) {
                 return -E_RX_POOL_EMPTY;
         }
-        memmove(data, rx_buf_array[head_index].buf, rx_desc_pool[head_index].length);
-        pkt_length = rx_desc_pool[head_index].length;
-        rx_desc_pool[head_index].status &= (~(E1000_RXD_STAT_DD | E1000_RXD_STAT_EOP));
-        e1000_bar0[INDEX2OFFSET(E1000_RDT)] = (tail_index + 1) % RX_DESC_POOL_SIZE;
-        head_index = (head_index + 1) % RX_DESC_POOL_SIZE;
+        *buf_idx = rec_head_index;
+        // memmove(data, rx_buf_array[rec_head_index].buf, rx_desc_pool[rec_head_index].length);
+        // pkt_length = rx_desc_pool[rec_head_index].length;
+        // rx_desc_pool[rec_head_index].status &= (~(E1000_RXD_STAT_DD | E1000_RXD_STAT_EOP));
+        // e1000_bar0[INDEX2OFFSET(E1000_RDT)] = (tail_index + 1) % RX_DESC_POOL_SIZE;
+        // rec_head_index = (rec_head_index + 1) % RX_DESC_POOL_SIZE;
         return pkt_length;
 }
 
@@ -254,4 +257,15 @@ e1000_intr()
         if (in_ns > 0 && intr_status & E1000_ICR_RXT0) {
                 envs[in_ns].env_status = ENV_RUNNABLE;
         }
+}
+
+void
+e1000_free_rx_buf()
+{
+        uint32_t tail_index;
+
+        tail_index = e1000_bar0[INDEX2OFFSET(E1000_RDT)];
+        rx_desc_pool[rec_head_index].status &= (~(E1000_RXD_STAT_DD | E1000_RXD_STAT_EOP));
+        e1000_bar0[INDEX2OFFSET(E1000_RDT)] = (tail_index + 1) % RX_DESC_POOL_SIZE;
+        rec_head_index = (rec_head_index + 1) % RX_DESC_POOL_SIZE;
 }

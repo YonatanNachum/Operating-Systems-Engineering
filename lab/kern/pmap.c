@@ -262,7 +262,7 @@ mem_init(void)
 
 	// Some more checks, only possible after kern_pgdir is installed.
 	check_page_installed_pgdir();
-	boot_map_region(kern_pgdir, 0xEA000000,
+	boot_map_region(kern_pgdir, RX_BUF_ADDR,
 	sizeof(struct rx_buf) * RX_DESC_POOL_SIZE,  PADDR(rx_buf_array), PTE_U);
 }
 

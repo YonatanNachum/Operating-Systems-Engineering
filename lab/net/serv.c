@@ -233,7 +233,7 @@ serve_thread(uint32_t a) {
 				req->socket.req_protocol);
 		break;
 	case NSREQ_INPUT:
-		jif_input(&nif, (void *)&req->pkt);
+		jif_input(&nif, (void *)&req->pkt_zero);
 		//ipc_send(input_envid, NSREQ_COMPLETE, NULL, 0);
 		r = 0;
 		break;

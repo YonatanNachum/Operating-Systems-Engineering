@@ -307,7 +307,6 @@ copy_shared_pages(envid_t child)
 	for (addr = 0; addr < USTACKTOP; addr += PGSIZE) {
 		if ((uvpd[PDX(addr)] & PTE_P) && (uvpt[PGNUM(addr)] & PTE_P) && (uvpt[PGNUM(addr)] & PTE_SHARE)) {
 			if ((err = sys_page_map(0, (void *)addr, child, (void *)addr, uvpt[PGNUM(addr)] & PTE_SYSCALL)) < 0) {
-				cprintf("err: 0x%8x !!!\n", addr);
 				return err;
 			}
 		}

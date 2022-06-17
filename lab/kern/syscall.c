@@ -261,8 +261,6 @@ sys_page_map(envid_t srcenvid, void *srcva,
 	}
 	if ((uint32_t)srcva >= UTOP || PGOFF(srcva) || (uint32_t)dstva >= UTOP || PGOFF(dstva) ||
 	    (perm & PTE_U) == 0 || (perm & PTE_P) == 0 || (perm & (~PTE_SYSCALL)) !=0) {
-		cprintf("dsvtva: 0x%x !!\n", dstva);
-		cprintf("prem: 0x%x\n", perm);
 		return -E_INVAL;
 	}
 	page = page_lookup(src_env->env_pgdir, srcva, &pte);
@@ -437,10 +435,10 @@ sys_try_transmit(void *data, uint32_t len)
 }
 
 static int
-sys_receive(void *addr)
+sys_receive(uint32_t *buf_idx)
 {
 	//user_mem_assert(curenv, addr, TX_PACKET_SIZE, PTE_W);
-	return e1000_receive(addr);
+	return e1000_receive(buf_idx);
 }
 
 static int
@@ -470,6 +468,12 @@ sys_get_mac_addr(uint8_t *addr)
 	for (i = 0; i < 6; ++i) {
 		addr[i] = e1000_mac[i];
 	}
+}
+
+static void
+sys_free_rx_buf()
+{
+	e1000_free_rx_buf();
 }
 
 // Dispatches to the correct kernel function, passing the arguments.
@@ -535,13 +539,17 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		return sys_try_transmit((void *)a1, a2);
 
 	case SYS_receive:
-		return sys_receive((void *)a1);
+		return sys_receive((uint32_t *)a1);
 
 	case SYS_env_set_type:
 		return sys_env_set_type(a1);
 
 	case SYS_get_mac_addr:
 		sys_get_mac_addr((uint8_t *)a1);
+		break;
+
+	case SYS_free_rx_buf:
+		sys_free_rx_buf();
 		break;
 
 	default:
