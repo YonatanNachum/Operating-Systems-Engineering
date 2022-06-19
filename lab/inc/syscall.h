@@ -13,7 +13,7 @@ enum {
 	SYS_exofork,
 	SYS_env_set_status,
 	SYS_env_set_trapframe,
-	SYS_env_set_pgfault_upcall,
+	SYS_env_set_pgfault_upcall, 
 	SYS_yield,
 	SYS_ipc_try_send,
 	SYS_ipc_recv,
@@ -25,6 +25,7 @@ enum {
 	SYS_get_mac_addr,
 	SYS_draw,
 	SYS_clear_screen,
+	SYS_free_rx_buf,
 	NSYSCALLS
 };
 

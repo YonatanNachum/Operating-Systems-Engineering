@@ -437,10 +437,10 @@ sys_try_transmit(void *data, uint32_t len)
 }
 
 static int
-sys_receive(void *addr)
+sys_receive(uint32_t *buf_idx)
 {
 	//user_mem_assert(curenv, addr, TX_PACKET_SIZE, PTE_W);
-	return e1000_receive(addr);
+	return e1000_receive(buf_idx);
 }
 
 static int
@@ -512,6 +512,12 @@ sys_clear_screen(void)
 	clear_screen();
 }
 
+static void
+sys_free_rx_buf()
+{
+	e1000_free_rx_buf();
+}
+
 // Dispatches to the correct kernel function, passing the arguments.
 int32_t
 syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
@@ -575,7 +581,7 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		return sys_try_transmit((void *)a1, a2);
 
 	case SYS_receive:
-		return sys_receive((void *)a1);
+		return sys_receive((uint32_t *)a1);
 
 	case SYS_env_set_type:
 		return sys_env_set_type(a1);
@@ -589,6 +595,10 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 
 	case SYS_clear_screen:
 		sys_clear_screen();
+    break;
+      
+	case SYS_free_rx_buf:
+		sys_free_rx_buf();
 		break;
 
 	default:

@@ -34,6 +34,7 @@ extern const char *binaryname;
 extern const volatile struct Env *thisenv;
 extern const volatile struct Env envs[NENV];
 extern const volatile struct PageInfo pages[];
+extern const volatile struct rx_buf rx_buf_array[128];
 
 // exit.c
 void	exit(void);
@@ -63,11 +64,12 @@ int	sys_ipc_recv(void *rcv_pg);
 unsigned int sys_time_msec(void);
 int	sys_change_priority(uint8_t p);
 int	sys_try_transmit(void *data, uint16_t len);
-int 	sys_receive(void *addr);
+int 	sys_receive(uint32_t *buf_idx);
 int	sys_env_set_type(enum EnvType type);
 int 	sys_get_mac_addr(uint8_t *addr);
 int	sys_draw(struct draw_type *shape);
 int	sys_clear_screen(void);
+int	sys_free_rx_buf();
 
 // This must be inlined.  Exercise for reader: why?
 static __inline envid_t __attribute__((always_inline))

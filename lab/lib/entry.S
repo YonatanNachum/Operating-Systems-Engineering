@@ -12,6 +12,8 @@
 	.set uvpt, UVPT
 	.globl uvpd
 	.set uvpd, (UVPT+(UVPT>>12)*4)
+	.globl rx_buf_array
+	.set rx_buf_array, (RX_BUF_ADDR)
 
 
 // Entrypoint - this is where the kernel (or our parent environment)

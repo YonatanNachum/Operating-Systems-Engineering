@@ -144,9 +144,9 @@ sys_try_transmit(void *data, uint16_t len)
 }
 
 int 
-sys_receive(void *addr)
+sys_receive(uint32_t *buf_idx)
 {
-	return syscall(SYS_receive, 0, (uint32_t)addr, 0, 0, 0, 0);
+	return syscall(SYS_receive, 0, (uint32_t)buf_idx, 0, 0, 0, 0);
 }
 
 int 
@@ -174,4 +174,10 @@ int
 sys_clear_screen(void)
 {
 	return syscall(SYS_clear_screen, 0, 0, 0, 0, 0, 0);
+}
+
+int
+sys_free_rx_buf()
+{
+	return syscall(SYS_free_rx_buf, 0, 0, 0, 0, 0, 0);
 }

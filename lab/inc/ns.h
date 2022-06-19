@@ -9,8 +9,10 @@
 
 struct jif_pkt {
 	int jp_len;
+	int buf_idx;
 	char jp_data[0];
 };
+
 
 // Definitions for requests from clients to network server
 enum {
@@ -103,5 +105,10 @@ union Nsipc {
 	// Ensure Nsipc is one page
 	char _pad[PGSIZE];
 };
+
+struct rx_buf
+{
+        char buf[2048];
+}__attribute__((packed));
 
 #endif // !JOS_INC_NS_H

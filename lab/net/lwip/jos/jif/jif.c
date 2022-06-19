@@ -130,7 +130,7 @@ low_level_input(void *va)
 
     /* We iterate over the pbuf chain until we have read the entire
      * packet into the pbuf. */
-    void *rxbuf = (void *) pkt->jp_data;
+    void *rxbuf = (void *) rx_buf_array[pkt->buf_idx].buf;
     int copied = 0;
     struct pbuf *q;
     for (q = p; q != NULL; q = q->next) {

@@ -10,6 +10,7 @@
 #include <kern/kclock.h>
 #include <kern/env.h>
 #include <kern/cpu.h>
+#include <kern/e1000.h>
 
 // These variables are set by i386_detect_memory()
 size_t npages;			// Amount of physical memory (in pages)
@@ -168,6 +169,8 @@ mem_init(void)
 	envs = (struct Env *)boot_alloc(sizeof(struct Env) * NENV);
 	memset(envs, 0, sizeof(struct Env) * NENV);
 
+	rx_buf_array = (struct rx_buf *)boot_alloc(sizeof(struct rx_buf) * RX_DESC_POOL_SIZE);
+	memset(rx_buf_array, 0, sizeof(struct rx_buf) * RX_DESC_POOL_SIZE);
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
 	// up the list of free physical pages. Once we've done so, all further
@@ -259,6 +262,8 @@ mem_init(void)
 
 	// Some more checks, only possible after kern_pgdir is installed.
 	check_page_installed_pgdir();
+	boot_map_region(kern_pgdir, RX_BUF_ADDR,
+	sizeof(struct rx_buf) * RX_DESC_POOL_SIZE,  PADDR(rx_buf_array), PTE_U);
 }
 
 // Modify mappings in kern_pgdir to support SMP

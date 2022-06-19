@@ -141,6 +141,8 @@
 // Physical address of startup code for non-boot CPUs (APs)
 #define MPENTRY_PADDR	0x7000
 
+#define RX_BUF_ADDR	0xD0500000
+
 #ifndef __ASSEMBLER__
 
 typedef uint32_t pte_t;

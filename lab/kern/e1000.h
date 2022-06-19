@@ -7,8 +7,7 @@
 #include <inc/string.h>
 #include <inc/error.h>
 #include <kern/picirq.h>
-
-extern uint8_t e1000_mac[6];
+#include <inc/ns.h>
 
 #define E1000_VENODR_ID 0x8086
 #define E1000_DEVICE_ID 0x100E
@@ -94,6 +93,10 @@ extern uint8_t e1000_mac[6];
 /* EEPROM/Flash Control */
 #define E1000_EECD_PRES      0x00000100 /* EEPROM Present */
 
+extern uint8_t e1000_mac[6];
+//extern char rx_buf_array[RX_DESC_POOL_SIZE][RX_PACKET_SIZE];
+extern struct rx_buf *rx_buf_array;
+
 struct e1000_tx_desc
 {
         uint64_t addr;
@@ -118,7 +121,8 @@ struct e1000_rx_desc
 
 int e1000_attach(struct pci_func *pcif);
 int e1000_transmit(void *data, uint16_t len);
-int e1000_receive(void *data);
+int e1000_receive(uint32_t *buf_idx);
 void e1000_intr();
+void e1000_free_rx_buf();
 
 #endif	// JOS_KERN_E1000_H
