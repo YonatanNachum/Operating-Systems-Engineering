@@ -29,6 +29,10 @@ We implemented, from scratch, a minimalistic yet fully functional operating syst
 - Lab 6: Network Driver
     - Initialization and transmitting packets
     - Receiving packets and the web server
+    - EEPROM MAC
+    - "Zero Copy"
 - Project:
     - VGA
     - Mouse
+    - Drawer
+    - Games: PingPong, Tic-Tac-Toe
