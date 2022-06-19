@@ -595,8 +595,8 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 
 	case SYS_clear_screen:
 		sys_clear_screen();
-    break;
-      
+    		break;
+
 	case SYS_free_rx_buf:
 		sys_free_rx_buf();
 		break;
