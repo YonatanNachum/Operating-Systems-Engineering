@@ -16,6 +16,8 @@
 #include <kern/spinlock.h>
 #include <kern/time.h>
 #include <kern/pci.h>
+#include <kern/vga.h>
+#include <kern/mouse.h>
 
 static void boot_aps(void);
 
@@ -54,6 +56,8 @@ i386_init(void)
 	time_init();
 	pci_init();
 
+	vga_init();
+	mouse_init();
 	// Acquire the big kernel lock before waking up APs
 	// Your code here:
 	lock_kernel();
@@ -78,7 +82,6 @@ i386_init(void)
 
 	// Should not be necessary - drains keyboard because interrupt has given up.
 	kbd_intr();
-
 	// Schedule and run the first user environment!
 	sched_yield();
 }

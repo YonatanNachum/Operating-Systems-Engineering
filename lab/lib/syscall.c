@@ -161,6 +161,21 @@ sys_get_mac_addr(uint8_t *addr)
 	return syscall(SYS_get_mac_addr, 0, (uint32_t)addr, 0, 0, 0, 0);
 }
 
+/* Returns the index of the shape in the kernel data structures for furthur use
+ * or -E_INVAL if there is an error.
+ */
+int 
+sys_draw(struct draw_type *shape)
+{
+	return syscall(SYS_draw, 0, (uint32_t)shape, 0, 0, 0, 0);
+}
+
+int 
+sys_clear_screen(void)
+{
+	return syscall(SYS_clear_screen, 0, 0, 0, 0, 0, 0);
+}
+
 int
 sys_free_rx_buf()
 {

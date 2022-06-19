@@ -13,6 +13,8 @@
 #include <kern/sched.h>
 #include <kern/time.h>
 #include <kern/e1000.h>
+#include <kern/vga.h>
+#include <kern/bitmap.h>
 
 // Print a string to the system console.
 // The string is exactly 'len' characters long.
@@ -470,6 +472,46 @@ sys_get_mac_addr(uint8_t *addr)
 	}
 }
 
+static int
+sys_draw(struct draw_type *shape)
+{
+	user_mem_assert(curenv, shape, sizeof(struct draw_type), PTE_W);
+	switch (shape->shape)
+	{
+	case shape_circle:
+		draw_circle(shape->u.circle, shape->border_color);
+		break;
+	
+	case shape_diamond:
+		draw_diamond(shape->u.diamond, shape->border_color);
+		break;
+	
+	case shape_line:
+		draw_line(shape->u.line.x1, shape->u.line.y1, shape->u.line.x2, shape->u.line.y2,
+			  shape->border_color);
+		break;
+
+	case shape_rectangle:
+		draw_rectangle(shape->u.rectangle, shape->border_color);
+		break;
+
+	case shape_string:
+		draw_string(shape->u.string.x, shape->u.string.y, shape->u.string.str,
+			    shape->border_color);
+		break;
+
+	default:
+		return -E_INVAL;
+	}
+	return 0;
+}
+
+static void
+sys_clear_screen(void)
+{
+	clear_screen();
+}
+
 static void
 sys_free_rx_buf()
 {
@@ -548,6 +590,13 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		sys_get_mac_addr((uint8_t *)a1);
 		break;
 
+	case SYS_draw:
+		return sys_draw((struct draw_type *)a1);
+
+	case SYS_clear_screen:
+		sys_clear_screen();
+    break;
+      
 	case SYS_free_rx_buf:
 		sys_free_rx_buf();
 		break;
