@@ -26,6 +26,7 @@ enum {
 	SYS_draw,
 	SYS_clear_screen,
 	SYS_free_rx_buf,
+	SYS_mouse_getp,
 	NSYSCALLS
 };
 

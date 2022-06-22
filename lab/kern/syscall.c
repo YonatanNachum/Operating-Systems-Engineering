@@ -15,6 +15,7 @@
 #include <kern/e1000.h>
 #include <kern/vga.h>
 #include <kern/bitmap.h>
+#include <kern/mouse.h>
 
 // Print a string to the system console.
 // The string is exactly 'len' characters long.
@@ -518,6 +519,15 @@ sys_free_rx_buf()
 	e1000_free_rx_buf();
 }
 
+// Read a packet from the mouse packet buffer.
+// Returns the packet, or 0 if there is no input waiting.
+static int
+sys_mouse_getp(struct mouse_u_pkt *pkt)
+{
+	user_mem_assert(curenv, pkt, sizeof(struct mouse_u_pkt), PTE_W);
+	return mouse_getp(pkt);
+}
+
 // Dispatches to the correct kernel function, passing the arguments.
 int32_t
 syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
@@ -600,6 +610,9 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 	case SYS_free_rx_buf:
 		sys_free_rx_buf();
 		break;
+
+	case SYS_mouse_getp:
+		return sys_mouse_getp((struct mouse_u_pkt *)a1);
 
 	default:
 		return -E_INVAL;

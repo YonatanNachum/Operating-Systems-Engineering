@@ -52,6 +52,14 @@ uint8_t color_backup[MOUSE_HEIGHT][MOUSE_WIDTH] = {{0}};
 
 uint8_t mouse_color[2];
 
+#define BUFSIZE 512
+
+static struct {
+	struct mouse_u_pkt buf[BUFSIZE];
+	uint32_t rpos;
+	uint32_t wpos;
+} m_pool;
+
 /* Checks buffers status in the PS/2 controller:
  * type = 0 - 	Output buffer status (0 = empty, 1 = full)
 		(must be set before attempting to read data from IO port 0x60)
@@ -185,6 +193,8 @@ drawMouse(int x, int y, bool clean) {
 static void
 mouse_command()
 {
+	struct mouse_u_pkt pkt;
+
 	if (packet.x_overflow || packet.y_overflow) {
 		return;
 	}
@@ -221,10 +231,12 @@ mouse_command()
 				cprintf("single\n");
 				//if (curr_pos.x >= color_loc.x)
 			}
+			pkt.r_clk = false;
 			remove_color_pick();
 		}
 		if (packet.r_btn) { 
 			cprintf("Right Click\n");
+			pkt.r_clk = true;
 			draw_color_pick(curr_pos.x + MOUSE_WIDTH, curr_pos.y);
 		}
 		if (packet.m_btn) {
@@ -234,6 +246,11 @@ mouse_command()
 			curr_pos.x = SCREEN_WIDTH / 2;
 			curr_pos.y = SCREEN_HEIGHT / 2;
 		}
+		pkt.x = prev_pos.x;
+		pkt.y = prev_pos.y;
+		m_pool.buf[m_pool.wpos++] = pkt;
+		if (m_pool.wpos == BUFSIZE)
+			m_pool.wpos = 0;		
 		lastclicktick = packet.tick;
 	}
 }
@@ -309,4 +326,39 @@ mouse_intr(void)
 			mouse_command();
 	  	}
 	}
+}
+
+// Here we manage the mouse input buffer,
+// where we stash packets received from the mouse
+// whenever the corresponding interrupt occurs.
+
+void
+mouse_poll(void)
+{
+	uint8_t status;
+	if (((status = inb(MOUSE_STATUS_REG)) & 1) == 0)
+		return;
+
+	/* Checks if this is a mouse packet and if so process it*/
+	if (status & 0x20) {
+		mouse_intr();
+	}
+}
+
+// return the next input packet if there was a click, or 0 if none waiting
+int
+mouse_getp(struct mouse_u_pkt *pkt)
+{
+	// poll for any pending input packets,
+	// so that this function works even when interrupts are disabled
+	mouse_poll();
+
+	// grab the next character from the input buffer.
+	if (m_pool.rpos != m_pool.wpos) {
+		*pkt = m_pool.buf[m_pool.rpos++];
+		if (m_pool.rpos == BUFSIZE)
+			m_pool.rpos = 0;
+		return 0;
+	}
+	return -1;
 }

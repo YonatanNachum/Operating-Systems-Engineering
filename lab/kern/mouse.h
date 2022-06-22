@@ -4,6 +4,8 @@
 # error "This is a JOS kernel header; user programs should not #include it"
 #endif
 
+#include <inc/mouse.h>
+
 /***** PS/2 Controller IO Ports *****/
 /* The PS/2 Controller itself uses 2 IO ports (IO ports 0x60 and 0x64).
  * Like many IO ports, reads and writes may access different internal registers.
@@ -21,4 +23,6 @@
 
 void mouse_init(void);
 void mouse_intr(void);
+int mouse_getp(struct mouse_u_pkt *pkt);
+
 #endif /* _MOUSE_H_ */

@@ -383,20 +383,6 @@ kbd_init(void)
 	irq_setmask_8259A(irq_mask_8259A & ~(1<<1));
 }
 
-/***** Mouse *****/
-void
-mouse_poll(void)
-{
-	uint8_t status;
-	if (((status = inb(MOUSE_STATUS_REG)) & 1) == 0)
-		return;
-
-	/* Checks if this is a mouse packet and if so process it*/
-	if (status & 0x20) {
-		mouse_intr();
-	}
-}
-
 /***** General device-independent console code *****/
 // Here we manage the console input buffer,
 // where we stash characters received from the keyboard or serial port
@@ -437,7 +423,6 @@ cons_getc(void)
 	// (e.g., when called from the kernel monitor).
 	serial_intr();
 	kbd_intr();
-	mouse_poll();
 
 	// grab the next character from the input buffer.
 	if (cons.rpos != cons.wpos) {

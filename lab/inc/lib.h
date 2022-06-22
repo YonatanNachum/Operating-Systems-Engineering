@@ -23,6 +23,7 @@
 #include <inc/malloc.h>
 #include <inc/ns.h>
 #include <inc/vga.h>
+#include <inc/mouse.h>
 
 #define USED(x)		(void)(x)
 
@@ -70,6 +71,7 @@ int 	sys_get_mac_addr(uint8_t *addr);
 int	sys_draw(struct draw_type *shape);
 int	sys_clear_screen(void);
 int	sys_free_rx_buf();
+int	sys_mouse_getp(struct mouse_u_pkt *pkt);
 
 // This must be inlined.  Exercise for reader: why?
 static __inline envid_t __attribute__((always_inline))

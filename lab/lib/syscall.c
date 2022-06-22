@@ -181,3 +181,9 @@ sys_free_rx_buf()
 {
 	return syscall(SYS_free_rx_buf, 0, 0, 0, 0, 0, 0);
 }
+
+int
+sys_mouse_getp(struct mouse_u_pkt *pkt)
+{
+	return syscall(SYS_mouse_getp, 0, (uint32_t)pkt, 0, 0, 0, 0); 
+}
