@@ -299,6 +299,8 @@ trap_dispatch(struct Trapframe *tf)
 		e1000_intr();
 		irq_eoi();
 		lapic_eoi();
+		break;
+
 	case IRQ_OFFSET + IRQ_MOUSE:
 		irq_eoi();
 		lapic_eoi();
