@@ -1,0 +1,57 @@
+=== Q How did you structure your transmit implementation? In particular, what do you do if the 
+===   transmit ring is full?
+We will answer this question for 2 situaions: Without "Zero copy" and with. Both answers takes
+to consideration that e1000 interupts are enabled.
+In both cases we initialized each descriptor in the descriptors array with E1000_TXD_CMD_RS,
+so when the card has transmitted a packet in a descriptor, the card will set the DD bit in the
+status field of the descriptor. If a descriptor's DD bit is set, we know it's safe to recycle
+that descriptor and use it to transmit another packet.
+In addition we enabled E1000_ICR_TXDW in the Interrupt Mask Set/Read register. This bit enables
+the descriptor done [Transmit Descriptor Write-back (TXDW)] interrupt - set when hardware writes
+back a descriptor with RS set. This is only expected to be used in cases where, for example,
+the streams interface has run out of descriptors and wants to be interrupted whenever progress
+is made. In this way we can be informed when the e1000 have free descriptors and if the transmit
+functions returns -E_TX_POOL_FULL, we know we can't send data until we will get this interrupt.
+In this case we put the output environment to sleep until we will get this interrupt and this way
+we prevent wasting cpu time on failed try trasnmit.
+1. Without "Zero Copy" - We use a global buffers array in kernel side, each time we try to trasnmit,
+the output env is sending a buffer which we copy his data to the next descriptor's buffer available(TDT).
+2. With "Zero Copy" - We use a global buffer array on user side, each time we trasmit the output env
+is sending a one buffer which we page walk on the find his physical address and use this buffer directly.
+The trasmit function is returning the index of the next descriptor to be used and his DD status so when
+it reaches the output env, it checks if DD is set and if not it goes to sleep until we will get an interupt
+stating we finished processing this descriptor.
+
+
+=== Q How did you structure your receive implementation? In particular, what do you do if the
+===   receive queue is empty and a user environment requests the next incoming packet?
+We will answer this question for 2 situaions: Without "Zero copy" and with. Both answers takes
+to consideration that e1000 interupts are enabled.
+We enabled E1000_ICR_RXT0 in the Interrupt Mask Set/Read register. This bit enables the Receiver
+Timer Interrupt (ICR.RXT0) and with setting Packet Timer to 0b disables both the Packet Timer and
+the Absolute Timer and it causes  the Receive Timer Interrupt to be generated whenever a new packet
+has been stored in memory. This way whenever the input env tries to receive a packet and gets the error
+E_RX_POOL_EMPTY, we put the input env to sleep until this interrupt is raised. This prevents from the 
+input env to do idle loops of try receive when the e1000 has no incoming packets and waste CPU time.
+In addition each time we want to read a descriptor we need to read from RDH but we can't read it from 
+software so we keep a global index to track RDH.
+1. Without "Zero Copy" -  We use a global buffers array in kernel side, each time we try to receive,
+the input env sends a buffer from user side to copy the data to and than advance the global index and
+RDT to tell e1000 it has another descriptor free.
+2. With "Zero Copy" - We mapped the receive buffer array to user side with READ-ONLY permission so he can
+access the data in the e1000 buffers directly. This was done by first allocating pages for the array and
+mapping it to an unused virtual address in user side. When the input env receives a packet, it will get
+the packet length and the buffer index to be read from(we won't mark the desc free now). This will be
+passed to lwip low_level_input function where instead of copying from a user buffer to pbuf of lwip,
+we copy the data directly from the kernel buffer, This was done by adding buf index field to jif_pkt struct.
+Because of the linearity of the input env, we wait enough ms to ensure it's safe to recycle the buffer and
+with a syscall we mark the buffer free.
+
+
+=== Q What does the web page served by JOS's web server say?
+This file came from JOS.
+Cheesy web page!
+
+
+=== Q How long approximately did it take you to do this lab?
+50
