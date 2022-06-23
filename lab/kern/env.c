@@ -301,7 +301,6 @@ region_alloc(struct Env *e, void *va, size_t len)
 		if (page == NULL) {
 			panic("Out Of Memory - region_alloc\n");
 		}
-		page->pp_ref++;
 		if (page_insert(e->env_pgdir, page, (void *)va_round, PTE_U | PTE_W) != 0) {
 			panic("Out Of Memory - region_alloc\n");
 		}
