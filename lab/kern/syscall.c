@@ -504,6 +504,7 @@ sys_draw(struct draw_type *shape)
 	default:
 		return -E_INVAL;
 	}
+	mouse_update_color_backup();
 	return 0;
 }
 
@@ -511,6 +512,7 @@ static void
 sys_clear_screen(void)
 {
 	clear_screen();
+	mouse_update_color_backup();
 }
 
 static void

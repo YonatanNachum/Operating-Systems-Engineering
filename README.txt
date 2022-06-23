@@ -8,5 +8,8 @@ with different colors on the screen and print complete sentences to the scrren. 
 abilities we created 2 games: Ping Pong and Tic-Tac-Toe to show vga capabilities.
 
 In the mouse driver, we implemented PS/2 mouse that uses polling and interrupts to send messages
-to the kernel about movement and clicking. The mouse supports left click and right click and can
-be used in different applications.
+to the kernel about movement and clicking. The mouse supports left click, right click and double click
+and can be used in different applications. We used a pool that stores mouse packets that there was a
+click in them and we expose the pool to the user using syscall (exactly how we pool from the keyboard
+or console), the user gets a struct contains the current location of the mouse and the click type and
+can use it for his applications.

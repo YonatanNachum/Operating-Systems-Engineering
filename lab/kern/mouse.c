@@ -9,6 +9,21 @@
 #include <kern/vga.h>
 #include <kern/time.h>
 
+/***** PS/2 Controller IO Ports *****/
+/* The PS/2 Controller itself uses 2 IO ports (IO ports 0x60 and 0x64).
+ * Like many IO ports, reads and writes may access different internal registers.
+ * Data port - The Data Port (IO Port 0x60) is used for reading data that was received
+ * from a PS/2 device or from the PS/2 controller itself and writing data to a PS/2 device
+ * or to the PS/2 controller itself.
+ * Status register - The Status Register contains various flags that show the state of the PS/2 controller.
+ * Command register - The Command Port (IO Port 0x64) is used for sending commands to the PS/2
+ * Controller (not to PS/2 devices).
+ * Referance: https://wiki.osdev.org/%228042%22_PS/2_Controller#PS.2F2_Controller_IO_Ports
+ */
+#define	MOUSE_DATA_REG		0x60
+#define MOUSE_STATUS_REG	0x64 /* READ */
+#define MOUSE_COMMAND_REG	0x64 /* WRITE */
+
 #define MOUSE_HEIGHT 	18
 #define MOUSE_WIDTH 	15
 
@@ -163,8 +178,33 @@ mouse_init(void)
 	curr_pos.y = SCREEN_HEIGHT / 2;
 }
 
+void mouse_update_color_backup()
+{
+    	int i, j;
+	uint8_t *addr;
+	int x = curr_pos.x;
+	int y = curr_pos.y;
+
+    	for (i = 0; i < MOUSE_HEIGHT; i++) {
+        	if (y + i >= SCREEN_HEIGHT || y + i < 0) {
+            		break;
+        	}
+        	for (j = 0; j < MOUSE_WIDTH; j++) {
+            		if (x + j >= SCREEN_WIDTH || x + j < 0) {
+                		break;
+            		}
+			
+            		uint8_t temp = mouse_pointer[i][j];
+            		if (temp) {
+                		addr = SCREEN_BASE_ADDR + (y + i) * SCREEN_WIDTH + x + j;
+				color_backup[i][j] = *addr;
+            		}
+        	}
+    	}
+}
+
 void 
-drawMouse(int x, int y, bool clean) {
+drawMouse(int x, int y, bool recover_old) {
     	int i, j;
 	uint8_t *addr;
     	for (i = 0; i < MOUSE_HEIGHT; i++) {
@@ -179,7 +219,7 @@ drawMouse(int x, int y, bool clean) {
             		uint8_t temp = mouse_pointer[i][j];
             		if (temp) {
                 		addr = SCREEN_BASE_ADDR + (y + i) * SCREEN_WIDTH + x + j;
-				if (clean) {
+				if (recover_old) {
 					*addr = color_backup[i][j];
 				} else {
 					color_backup[i][j] = *addr;
@@ -226,18 +266,18 @@ mouse_command()
 	if (btns) {
 		if (packet.l_btn) {
 			if (packet.tick - lastclicktick < 200) {
-				cprintf("double\n");
+				//cprintf("double\n");
+				pkt.type = DBL_CLICK;
 			} else {
-				cprintf("single\n");
-				//if (curr_pos.x >= color_loc.x)
+				//cprintf("single\n");
+				pkt.type = L_CLICK;
 			}
-			pkt.r_clk = false;
-			remove_color_pick();
+			//remove_color_pick();
 		}
 		if (packet.r_btn) { 
-			cprintf("Right Click\n");
-			pkt.r_clk = true;
-			draw_color_pick(curr_pos.x + MOUSE_WIDTH, curr_pos.y);
+			//cprintf("Right Click\n");
+			pkt.type = R_CLICK;
+			//draw_color_pick(curr_pos.x + MOUSE_WIDTH, curr_pos.y);
 		}
 		if (packet.m_btn) {
 			cprintf("Middle\n");
@@ -360,5 +400,6 @@ mouse_getp(struct mouse_u_pkt *pkt)
 			m_pool.rpos = 0;
 		return 0;
 	}
+	pkt->type = NO_CLICK;
 	return -1;
 }
