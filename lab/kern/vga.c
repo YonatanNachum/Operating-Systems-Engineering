@@ -68,7 +68,9 @@ void
 vga_init(void)
 {
 	uint8_t i;
-	/* ___Sequencer Registers:___ */
+	/* ___Sequencer Registers:___ 
+	 * http://www.osdever.net/FreeVGA/vga/seqreg.htm
+	 */
 	/* Reset Register:
 	 * SR - 1
 	 * AR - 1
@@ -102,6 +104,7 @@ vga_init(void)
 
 
 	/* ___Miscellaneous Output Register:___
+	 * http://www.osdever.net/FreeVGA/vga/extreg.htm
 	 * I/OAS - 1
 	 * RAM En - 1
 	 * HSYNCP - 1
@@ -110,7 +113,9 @@ vga_init(void)
 	outb(MISC_OUTPUT_REG_WRITE, 0x63);
 
 
-	/* ___Graphics Registers:___ */
+	/* ___Graphics Registers:___ 
+	 * http://www.osdever.net/FreeVGA/vga/graphreg.htm
+	 */
 	/* Set/Reset Register: */
 	outb(GRAPHIC_ADDR_REG, GRAPHIC_SET_RESET_IDX);
 	outb(GRAPHIC_DATA_REG, 0x0);

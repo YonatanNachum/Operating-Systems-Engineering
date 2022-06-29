@@ -19,7 +19,7 @@ umain(int argc, char **argv)
                                 color++;
                                 draw_rectangle(50, 50, 80, 80, VGA_BLACK, VGA_BLACK);
                                 draw_rectangle(50, 50, 80, 80, color, color);
-                            }
+                        }
                         ++i;
                 }
 	}

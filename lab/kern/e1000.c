@@ -42,7 +42,12 @@ e1000_tx_init()
         e1000_bar0[INDEX2OFFSET(E1000_TDH)] = 0;
         e1000_bar0[INDEX2OFFSET(E1000_TDT)] = 0;
 
-        // Initializing flags
+        /* Initializing flags:
+         * Transmit Enable
+         * Pad Short Packets: Padding makes the packet 64 bytes long.
+         * Collision Distance - Full-Duplex
+         * Collision Threshold - Number of re-transmission prior to giving up on the packet.
+         */
         e1000_bar0[INDEX2OFFSET(E1000_TCTL)] = (E1000_TCTL_EN | E1000_TCTL_PSP | (E1000_TCTL_COLD & (0x40 << 12)) |
                                                 (E1000_TCTL_CT & (0x10 << 4)));
 
@@ -246,10 +251,10 @@ e1000_intr()
         uint32_t intr_status;
         static envid_t out_ns, in_ns;
 
-	if (out_ns <= 0 || in_ns <= 0)
+	if (out_ns <= 0 || in_ns <= 0) {
 		out_ns = env_find_by_type(ENV_TYPE_OUT_NS);
                 in_ns = env_find_by_type(ENV_TYPE_IN_NS);
-
+        }
         intr_status = e1000_bar0[INDEX2OFFSET(E1000_ICR)];
         if (out_ns > 0 && intr_status & E1000_ICR_TXDW) {
                 envs[out_ns].env_status = ENV_RUNNABLE;

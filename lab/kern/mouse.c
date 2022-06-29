@@ -19,6 +19,7 @@
  * Command register - The Command Port (IO Port 0x64) is used for sending commands to the PS/2
  * Controller (not to PS/2 devices).
  * Referance: https://wiki.osdev.org/%228042%22_PS/2_Controller#PS.2F2_Controller_IO_Ports
+ * 	      https://wiki.osdev.org/Mouse_Input#Set_Compaq_Status.2FEnable_IRQ12
  */
 #define	MOUSE_DATA_REG		0x60
 #define MOUSE_STATUS_REG	0x64 /* READ */
@@ -393,7 +394,7 @@ mouse_getp(struct mouse_u_pkt *pkt)
 	// so that this function works even when interrupts are disabled
 	mouse_poll();
 
-	// grab the next character from the input buffer.
+	// grab the next mouse packet from the input buffer.
 	if (m_pool.rpos != m_pool.wpos) {
 		*pkt = m_pool.buf[m_pool.rpos++];
 		if (m_pool.rpos == BUFSIZE)
