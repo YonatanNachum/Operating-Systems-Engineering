@@ -230,51 +230,44 @@ tic_tac_toe_game()
                 case RIGHT_KEY:
                         if (grid_box_y < 2) {
                                 grid_box_y++;
-                                col++;
                         }
                         break;
 
                 case LEFT_KEY:
                         if (grid_box_y > 0) {
                                 grid_box_y--;
-                                col--;
                         }
-                        // else
-                        // {
-                        //         grid_inner_box_x = 30;
-                        //         col = 0;
-                        // }
                         break;
 
                 case DOWN_KEY:
                         if (grid_box_x < 2) {
                                 grid_box_x++;
-                                row++;
                         }
                         break;
 
                 case UP_KEY:
                         if (grid_box_x > 0) {
                                 grid_box_x--;
-                                row--;
                         }
                         break;
 
                 case SPACE_KEY:
-                        if (grid[row][col] > 0) {
+                        if (grid[grid_box_x][grid_box_y] > 0) {
                                 error = true;
-                        }
-                        if (turn == PLAYER_1) {
-                                grid[row][col] = PLAYER_1;
-                                player_1_moves++;
-                                turn = PLAYER_2;
-                        } else if (turn == PLAYER_2) {
-                                grid[row][col] = PLAYER_2;
-                                player_2_moves++;
-                                turn = PLAYER_1;
+                        } else {
+                                if (turn == PLAYER_1) {
+                                        grid[grid_box_x][grid_box_y] = PLAYER_1;
+                                        player_1_moves++;
+                                        turn = PLAYER_2;
+                                } else if (turn == PLAYER_2) {
+                                        grid[grid_box_x][grid_box_y] = PLAYER_2;
+                                        player_2_moves++;
+                                        turn = PLAYER_1;
+                                }
                         }
                         break;
                 }
+                cprintf("turn: %u\n", turn);
                 clear_screen();
                 draw_game_board();
                 if (player_1_moves >= 3 || player_2_moves >= 3) {
