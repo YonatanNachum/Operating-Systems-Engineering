@@ -9,9 +9,6 @@ sleep(int msec)
 	unsigned current = sys_time_msec();
 	unsigned end = current + msec;
 
-	// if ((int)current < 0 && (int)current > -MAXERROR) {
-	// 	panic("sys_time_msec: %e", (int)current);
-	// }
 	if (end < current)
 		panic("sleep: wrap");
 
