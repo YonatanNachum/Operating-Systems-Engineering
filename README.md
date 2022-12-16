@@ -3,7 +3,7 @@
 Faculty of Computer Science, Technion.
 
 ## Introduction
-We implemented, from scratch, a minimalistic yet fully functional operating system that supports virtual memory, kernel and user modes, system calls, threads, context switches, interrupts, interprocess communication, coordination of concurrent activities, file system I/O, and networking.
+We implemented, from scratch, a minimalistic yet fully functional operating system that supports virtual memory, kernel and user modes, system calls, threads, context switches, interrupts, interprocess communication, coordination of concurrent activities, file system I/O, networking, VGA and mouse.
 
 ## Contents
 - Lab 1: Booting a PC
@@ -36,3 +36,14 @@ We implemented, from scratch, a minimalistic yet fully functional operating syst
     - Mouse
     - Drawer
     - Games: PingPong, Tic-Tac-Toe
+
+## How To Run
+- Install VM
+- Install "Ubuntu 14.04.2 LTS (Trusty Tahr) i386" image inside the VM.
+- Run the following commands inside the VM:
+    - sudo apt-get update
+    - sudo apt-get -y install qemu gitk git-gui build-essential gcc-multilib
+    - sudo ln -s /usr/bin/qemu-system-i386 /usr/bin/qemu
+    - echo "set auto-load safe-path /" >> ~/.gdbinit
+- Clone repository.
+- Run make inside the repository to start the OS.
