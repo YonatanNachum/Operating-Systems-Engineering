@@ -39,7 +39,7 @@ We implemented, from scratch, a minimalistic yet fully functional operating syst
 
 ## How To Run
 - Install VM
-- Install "Ubuntu 14.04.2 LTS (Trusty Tahr) i386" image inside the VM.
+- Install "[Ubuntu 14.04.2 LTS (Trusty Tahr) i386](http://old-releases.ubuntu.com/releases/14.04.2/)" image inside the VM.
 - Run the following commands inside the VM:
     - sudo apt-get update
     - sudo apt-get -y install qemu gitk git-gui build-essential gcc-multilib
