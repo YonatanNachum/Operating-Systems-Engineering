@@ -41,9 +41,11 @@ We implemented, from scratch, a minimalistic yet fully functional operating syst
 - Install VM
 - Install "[Ubuntu 14.04.2 LTS (Trusty Tahr) i386](http://old-releases.ubuntu.com/releases/14.04.2/)" image inside the VM.
 - Run the following commands inside the VM:
-    - sudo apt-get update
-    - sudo apt-get -y install qemu gitk git-gui build-essential gcc-multilib
-    - sudo ln -s /usr/bin/qemu-system-i386 /usr/bin/qemu
-    - echo "set auto-load safe-path /" >> ~/.gdbinit
+```bash
+sudo apt-get update
+sudo apt-get -y install qemu gitk git-gui build-essential gcc-multilib
+sudo ln -s /usr/bin/qemu-system-i386 /usr/bin/qemu
+echo "set auto-load safe-path /" >> ~/.gdbinit
+```
 - Clone repository.
 - Run make inside the repository to start the OS.
