@@ -48,11 +48,22 @@ sudo ln -s /usr/bin/qemu-system-i386 /usr/bin/qemu
 echo "set auto-load safe-path /" >> ~/.gdbinit
 ```
 - Clone repository.
-- Run
+- Run the following inside the repository to start the OS.
+### Games
 ```bash
 make qemu-nox
+#Run inside qemu to excute different tasks
+pong #Start ping pong
+tictactoe #Start tic tac toe
 ```
-inside the repository to start the OS.
+### Network
+```bash
+make which-ports #Show a web page served by the HTTP server running inside JOS.
+
+#Echo test - a daemon called echosrv that sets up an echo server running on port 7 that will echo back anything sent over a TCP connection.
+make E1000_DEBUG=TX,TXERR,RX,RXERR,RXFILTER run-echosrv #First terminal
+make nc-7 #Second terminal
+```
 
 ## Results
 | Tic Tac Toe      | Ping Pong      |
