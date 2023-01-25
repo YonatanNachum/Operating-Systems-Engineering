@@ -48,4 +48,13 @@ sudo ln -s /usr/bin/qemu-system-i386 /usr/bin/qemu
 echo "set auto-load safe-path /" >> ~/.gdbinit
 ```
 - Clone repository.
-- Run make inside the repository to start the OS.
+- Run
+```bash
+make qemu-nox
+```
+inside the repository to start the OS.
+
+## Results
+| Tic Tac Toe      | Ping Pong      |
+|------------|-------------|
+|<img width="634" alt="Screen Shot 2023-01-25 at 17 36 42" src="https://user-images.githubusercontent.com/62839801/214607383-5d0e1314-32ef-43fb-9280-9c24fa132833.png">|<img width="640" alt="Screen Shot 2023-01-25 at 17 39 02" src="https://user-images.githubusercontent.com/62839801/214607507-cdf6e153-a975-4398-972f-207013976c5d.png">|
