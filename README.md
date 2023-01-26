@@ -52,17 +52,18 @@ echo "set auto-load safe-path /" >> ~/.gdbinit
 ### Games
 ```bash
 make qemu-nox
-#Run inside qemu to excute different tasks
-pong #Start ping pong
-tictactoe #Start tic tac toe
+# Run inside qemu to excute different tasks
+pong # Start ping pong
+tictactoe # Start tic tac toe
 ```
 ### Network
 ```bash
-make which-ports #Show a web page served by the HTTP server running inside JOS.
+make which-ports # Show a web page served by the HTTP server running inside JOS.
 
-#Echo test - a daemon called echosrv that sets up an echo server running on port 7 that will echo back anything sent over a TCP connection.
-make E1000_DEBUG=TX,TXERR,RX,RXERR,RXFILTER run-echosrv #First terminal
-make nc-7 #Second terminal
+# Echo test - a daemon called echosrv that sets up an echo server running on port 7
+# that will echo back anything sent over a TCP connection.
+make E1000_DEBUG=TX,TXERR,RX,RXERR,RXFILTER run-echosrv # First terminal
+make nc-7 # Second terminal
 ```
 
 ## Results
